@@ -11,7 +11,7 @@ async function bootstrap() {
   const options = new DocumentBuilder()
     .setTitle('Propuesta IA')
     .setDescription(
-      'This is the documentation for Pro-GPT.',
+      'This is the documentation for reservacion de vehiculos.',
     )
     .setVersion('1.0')
     .build();
