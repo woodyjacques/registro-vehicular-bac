@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import * as PDFDocument from 'pdfkit';
-import * as fs from 'fs';
-import * as path from 'path';
 import * as nodemailer from 'nodemailer';
 import { google } from 'googleapis';
 import * as dotenv from 'dotenv';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 dotenv.config();
 
@@ -27,57 +25,58 @@ export class SalidasService {
     }
 
     this.auth = new google.auth.JWT(clientEmail, null, privateKey, scopes);
-
     console.log('Autenticación inicializada.');
   }
 
-  private async generarPDF(datosPlaca: string[], fechaSalida: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const pdfDir = path.join(__dirname, '..', 'files'); 
-      const pdfPath = path.join(pdfDir, `salida_${datosPlaca[1]}.pdf`);
+  private async generarPDF(datosPlaca: string[], fechaSalida: string): Promise<Buffer> {
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([600, 400]);
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontSize = 12;
 
-      if (!fs.existsSync(pdfDir)) {
-        fs.mkdirSync(pdfDir, { recursive: true });
-      }
+      const title = 'Reporte de Salida de Vehículo';
+      const sucursal = `Sucursal: ${datosPlaca[0]}`;
+      const placa = `Placa: ${datosPlaca[1]}`;
+      const conductor = `Conductor: ${datosPlaca[2]}`;
+      const registro = `Registro: ${datosPlaca[3]}`;
+      const identificador = `Identificador: ${datosPlaca[4]}`;
+      const estado = `Estado: ${datosPlaca[6]}`;
+      const fecha = `Fecha de Salida: ${fechaSalida}`;
 
-      const doc = new PDFDocument();
-      const writeStream = fs.createWriteStream(pdfPath);
-      doc.pipe(writeStream);
+      page.drawText(title, { x: 50, y: 350, size: 20, font, color: rgb(0, 0, 0) });
+      page.drawText(sucursal, { x: 50, y: 330, size: fontSize, font });
+      page.drawText(placa, { x: 50, y: 310, size: fontSize, font });
+      page.drawText(conductor, { x: 50, y: 290, size: fontSize, font });
+      page.drawText(registro, { x: 50, y: 270, size: fontSize, font });
+      page.drawText(identificador, { x: 50, y: 250, size: fontSize, font });
 
-      doc.fontSize(20).text('Reporte de Salida de Vehículo', { align: 'center' });
-      doc.moveDown();
-      doc.fontSize(14).text(`Sucursal: ${datosPlaca[0]}`);
-      doc.text(`Placa: ${datosPlaca[1]}`);
-      doc.text(`Conductor: ${datosPlaca[2]}`);
-      doc.text(`Registro: ${datosPlaca[3]}`);
-      doc.text(`Identificador: ${datosPlaca[4]}`);
-
-      doc.fontSize(14).fillColor('blue').text('Licencias: Ver archivo', {
-        link: datosPlaca[5],
-        underline: true
+      page.drawText('Licencias: Ver archivo', {
+        x: 50,
+        y: 230,
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 1),
+      });
+      page.drawText('Reportes: Ver enlace', {
+        x: 50,
+        y: 210,
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 1),
       });
 
-      doc.fontSize(14).fillColor('blue').text('Reportes: Ver enlace', {
-        link: datosPlaca[7],
-        underline: true
-      });
+      page.drawText(estado, { x: 50, y: 190, size: fontSize, font });
+      page.drawText(fecha, { x: 50, y: 170, size: fontSize, font });
 
-      doc.fillColor('black').fontSize(14).text(`Estado: ${datosPlaca[6]}`);
-      doc.text(`Fecha de Salida: ${fechaSalida}`);
-
-      doc.end();
-
-      writeStream.on('finish', () => {
-        resolve(pdfPath);
-      });
-
-      writeStream.on('error', (error) => {
-        reject(error);
-      });
-    });
+      const pdfBytes = await pdfDoc.save();
+      return Buffer.from(pdfBytes); 
+    } catch (error) {
+      throw new Error('Error al generar el PDF.');
+    }
   }
 
-  private async enviarCorreoConPDF(pdfPath: string, email: string): Promise<void> {
+  private async enviarCorreoConPDF(pdfBuffer: Buffer, email: string): Promise<void> {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -93,8 +92,8 @@ export class SalidasService {
       text: 'Adjunto encontrarás el reporte de salida del vehículo.',
       attachments: [
         {
-          filename: path.basename(pdfPath),
-          path: pdfPath,
+          filename: 'salida.pdf',
+          content: pdfBuffer, 
         },
       ],
     };
@@ -201,13 +200,11 @@ export class SalidasService {
       const datosPlaca = await this.obtenerDatosPlaca(placa);
       datosPlaca.push(fechaSalida);
 
-      const pdfPath = await this.generarPDF(datosPlaca, fechaSalida);
+      const pdfBuffer = await this.generarPDF(datosPlaca, fechaSalida);
 
-      await this.enviarCorreoConPDF(pdfPath, 'woodyjacques1@gmail.com');
+      await this.enviarCorreoConPDF(pdfBuffer, 'woodyjacques1@gmail.com');
 
       await this.actualizarFechaDeSalida(placa, fechaSalida);
-
-      fs.unlinkSync(pdfPath);
 
       return { message: `Salida registrada y correo enviado para el vehículo con placa ${placa}.` };
     } catch (error) {

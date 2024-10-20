@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { google } from 'googleapis';
-import * as PDFDocument from 'pdfkit';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as nodemailer from 'nodemailer'; 
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import * as nodemailer from 'nodemailer';
 import * as dotenv from 'dotenv';
+import { Readable } from 'stream';
 
 dotenv.config();
 
@@ -31,64 +30,125 @@ export class InspeccionService {
     console.log("Autenticación inicializada.");
   }
 
-  async create(createInspeccionDto: any, documentos: Array<Express.Multer.File>): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const pdfPath = path.join(__dirname, '..', 'files', 'inspeccion.pdf');
+  async create(createInspeccionDto: any, documentos: Array<Express.Multer.File>): Promise<Buffer> {
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([600, 800]);
 
-      const dirPath = path.dirname(pdfPath);
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+      page.drawText('Reporte de Inspección de Vehículo', {
+        x: 50,
+        y: 750,
+        size: 20,
+        font,
+        color: rgb(0, 0, 0),
+      });
+
+      let yPosition = 720;
+
+      const inspectionData = [
+        `Sucursal: ${createInspeccionDto.sucursal}`,
+        `Placa: ${createInspeccionDto.placa}`,
+        `Conductor: ${createInspeccionDto.conductor}`,
+        `Fecha de Registro: ${createInspeccionDto.fechaRegistro}`,
+        `Identificador: ${createInspeccionDto.identificador}`,
+      ];
+
+      inspectionData.forEach((text) => {
+        page.drawText(text, {
+          x: 50,
+          y: yPosition,
+          size: 14,
+          font,
+          color: rgb(0, 0, 0),
+        });
+        yPosition -= 20;
+      });
+
+      yPosition -= 20;
+      page.drawText('Observaciones:', {
+        x: 50,
+        y: yPosition,
+        size: 16,
+        font,
+        color: rgb(0, 0, 0),
+      });
+      yPosition -= 20;
+
+      createInspeccionDto.observaciones.forEach((obs: string, index: number) => {
+        page.drawText(`${index + 1}. ${obs}`, {
+          x: 50,
+          y: yPosition,
+          size: 14,
+          font,
+          color: rgb(0, 0, 0),
+        });
+        yPosition -= 20;
+      });
+
+      yPosition -= 20;
+      page.drawText('Documentos Adjuntos:', {
+        x: 50,
+        y: yPosition,
+        size: 16,
+        font,
+        color: rgb(0, 0, 0),
+      });
+      yPosition -= 20;
+
+      for (const [index, documento] of documentos.entries()) {
+        page.drawText(`${index + 1}. ${documento.originalname} (${documento.mimetype}, ${documento.size} bytes)`, {
+          x: 50,
+          y: yPosition,
+          size: 14,
+          font,
+          color: rgb(0, 0, 0),
+        });
+        yPosition -= 20;
+
+        if (yPosition < 100) {
+          page.drawText('Continúa en la siguiente página...', {
+            x: 50,
+            y: yPosition,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+          });
+          yPosition = 750;
+          pdfDoc.addPage([600, 800]);
+        }
+
+        console.log('Procesando archivo:', documento.originalname, documento.mimetype, documento.size);
+
+        if (documento.mimetype.startsWith('image/')) {
+          let image;
+          if (documento.mimetype === 'image/jpeg') {
+            image = await pdfDoc.embedJpg(documento.buffer);
+          } else if (documento.mimetype === 'image/png') {
+            image = await pdfDoc.embedPng(documento.buffer);
+          } else {
+            throw new Error(`Formato de imagen no soportado: ${documento.mimetype}`);
+          }
+          const { width, height } = image.scale(0.25);
+          page.drawImage(image, {
+            x: 50,
+            y: yPosition - height - 20,
+            width,
+            height,
+          });
+          yPosition -= height + 40;
+        }
       }
 
-      const doc = new PDFDocument();
-      const writeStream = fs.createWriteStream(pdfPath);
-      doc.pipe(writeStream);
-
-      doc.fontSize(20).text('Reporte de Inspección de Vehículo', { align: 'center' });
-      doc.moveDown();
-      doc.fontSize(14).text(`Sucursal: ${createInspeccionDto.sucursal}`);
-      doc.text(`Placa: ${createInspeccionDto.placa}`);
-      doc.text(`Conductor: ${createInspeccionDto.conductor}`);
-      doc.text(`Fecha de Registro: ${createInspeccionDto.fechaRegistro}`);
-      doc.text(`Identificador: ${createInspeccionDto.identificador}`);
-
-      doc.moveDown();
-      doc.fontSize(16).text('Observaciones:');
-      createInspeccionDto.observaciones.forEach((obs: string, index: number) => {
-        doc.text(`${index + 1}. ${obs}`);
-      });
-
-      doc.moveDown();
-      doc.fontSize(16).text('Documentos Adjuntos:');
-      documentos.forEach((documento, index) => {
-        doc.text(`${index + 1}. ${documento.originalname} (${documento.mimetype}, ${documento.size} bytes)`);
-
-        doc.moveDown(1);
-
-        const buffer = documento.buffer;
-
-        doc.image(buffer, {
-          fit: [250, 150],  
-          align: 'center',
-          valign: 'center'
-        });
-
-        doc.moveDown(2);
-      });
-
-      doc.end();
-
-      writeStream.on('finish', () => {
-        resolve(pdfPath);
-      });
-
-      writeStream.on('error', (error) => {
-        reject(error);
-      });
-    });
+      const pdfBytes = await pdfDoc.save();
+      return Buffer.from(pdfBytes);
+    } catch (error) {
+      throw new Error('Error al crear el PDF: ' + error.message);
+    }
   }
 
-  async enviarCorreoConPDF(pdfPath: string, email: string): Promise<void> {
+  async enviarCorreoConPDF(pdfBuffer: Buffer, email: string): Promise<void> {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -104,8 +164,8 @@ export class InspeccionService {
       text: 'Adjunto encontrarás el reporte de inspección del vehículo.',
       attachments: [
         {
-          filename: path.basename(pdfPath),
-          path: pdfPath,
+          filename: 'inspeccion.pdf',
+          content: pdfBuffer,
         },
       ],
     };
@@ -114,7 +174,7 @@ export class InspeccionService {
     console.log('Correo enviado exitosamente.');
   }
 
-  async uploadFileToDrive(filePath: string, fileName: string): Promise<string> {
+  async uploadFileToDrive(pdfBuffer: Buffer, fileName: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const drive = google.drive({ version: 'v3', auth: this.auth });
 
@@ -125,7 +185,7 @@ export class InspeccionService {
 
       const media = {
         mimeType: 'application/pdf',
-        body: fs.createReadStream(filePath),
+        body: Readable.from(pdfBuffer),
       };
 
       drive.files.create(
@@ -146,7 +206,7 @@ export class InspeccionService {
               requestBody: {
                 role: 'reader',
                 type: 'anyone',
-              }
+              },
             }, (error) => {
               if (error) {
                 console.error('Error al configurar permisos en Google Drive:', error);
@@ -164,7 +224,7 @@ export class InspeccionService {
 
   async findRowNumber(uniqueIdentifier: string): Promise<number | null> {
     const spreadsheetId = process.env.GOOGLE_SPREADSHEETID;
-    const range = 'Hoja 1!E:E';  
+    const range = 'Hoja 1!E:E';
 
     try {
       const response = await this.sheets.spreadsheets.values.get({
@@ -177,7 +237,7 @@ export class InspeccionService {
       if (rows) {
         for (let i = 0; i < rows.length; i++) {
           if (rows[i][0] === uniqueIdentifier) {
-            return i + 1;  
+            return i + 1;
           }
         }
       }
@@ -188,15 +248,23 @@ export class InspeccionService {
     }
   }
 
-  async saveDataToSheet(sucursal: string, placa: string, conductor: string, fechaRegistro: string, uniqueIdentifier: string, licencias:string, fileLink: string) {
+  async saveDataToSheet(
+    sucursal: string,
+    placa: string,
+    conductor: string,
+    fechaRegistro: string,
+    uniqueIdentifier: string,
+    licencias: string,
+    fileLink: string
+  ) {
     const spreadsheetId = process.env.GOOGLE_SPREADSHEETID;
-    const rowNumber = await this.findRowNumber(uniqueIdentifier);  
+    const rowNumber = await this.findRowNumber(uniqueIdentifier);
 
     let range;
     if (rowNumber) {
-      range = `Hoja 1!A${rowNumber}:J${rowNumber}`;  
+      range = `Hoja 1!A${rowNumber}:J${rowNumber}`;
     } else {
-      range = `Hoja 1!A:J`; 
+      range = `Hoja 1!A:J`;
     }
 
     try {
@@ -216,12 +284,12 @@ export class InspeccionService {
               placa,
               conductor,
               fechaRegistro,
-              uniqueIdentifier, 
-              licencias,         
+              uniqueIdentifier,
+              licencias,
               estado,
-              reportes,      
-              fechaSalida
-            ]
+              reportes,
+              fechaSalida,
+            ],
           ],
         },
       });
@@ -235,11 +303,11 @@ export class InspeccionService {
 
   async handleData(createInspeccionDto: any, documentos: Array<Express.Multer.File>) {
     try {
-      const pdfPath = await this.create(createInspeccionDto, documentos);
+      const pdfBuffer = await this.create(createInspeccionDto, documentos);
       const pdfFileName = `Reporte_Inspeccion_${createInspeccionDto.placa}_${createInspeccionDto.fechaRegistro}.pdf`;
-      const fileLink = await this.uploadFileToDrive(pdfPath, pdfFileName);
+      const fileLink = await this.uploadFileToDrive(pdfBuffer, pdfFileName);
 
-      await this.enviarCorreoConPDF(pdfPath, 'woodyjacques1@gmail.com'); 
+      await this.enviarCorreoConPDF(pdfBuffer, 'woodyjacques1@gmail.com');
 
       await this.saveDataToSheet(
         createInspeccionDto.sucursal,
@@ -250,8 +318,6 @@ export class InspeccionService {
         createInspeccionDto.licencias,
         fileLink
       );
-
-      fs.unlinkSync(pdfPath);
 
       return { message: 'Inspección creada exitosamente, archivo subido a Google Drive, enviado por correo y guardado en Google Sheets.' };
     } catch (error) {
