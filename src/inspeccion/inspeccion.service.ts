@@ -3,6 +3,7 @@ import { google } from 'googleapis';
 import * as PDFDocument from 'pdfkit';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as nodemailer from 'nodemailer'; 
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -87,6 +88,32 @@ export class InspeccionService {
     });
   }
 
+  async enviarCorreoConPDF(pdfPath: string, email: string): Promise<void> {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: email,
+      subject: 'Reporte de Inspección de Vehículo',
+      text: 'Adjunto encontrarás el reporte de inspección del vehículo.',
+      attachments: [
+        {
+          filename: path.basename(pdfPath),
+          path: pdfPath,
+        },
+      ],
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log('Correo enviado exitosamente.');
+  }
+
   async uploadFileToDrive(filePath: string, fileName: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const drive = google.drive({ version: 'v3', auth: this.auth });
@@ -161,7 +188,7 @@ export class InspeccionService {
     }
   }
 
-  async saveDataToSheet(sucursal: string, placa: string, conductor: string, fechaRegistro: string, uniqueIdentifier: string, fileLink: string) {
+  async saveDataToSheet(sucursal: string, placa: string, conductor: string, fechaRegistro: string, uniqueIdentifier: string, licencias:string, fileLink: string) {
     const spreadsheetId = process.env.GOOGLE_SPREADSHEETID;
     const rowNumber = await this.findRowNumber(uniqueIdentifier);  
 
@@ -173,9 +200,8 @@ export class InspeccionService {
     }
 
     try {
-      const estado = 'Inspeccionar';
+      const estado = 'Seguimiento';
       const reportes = fileLink;
-      const salida = 'Registrar';
       const fechaSalida = 'No registrado';
 
       const response = await this.sheets.spreadsheets.values.update({
@@ -190,11 +216,10 @@ export class InspeccionService {
               placa,
               conductor,
               fechaRegistro,
-              uniqueIdentifier,
-              '',           
+              uniqueIdentifier, 
+              licencias,         
               estado,
               reportes,      
-              salida,
               fechaSalida
             ]
           ],
@@ -210,10 +235,11 @@ export class InspeccionService {
 
   async handleData(createInspeccionDto: any, documentos: Array<Express.Multer.File>) {
     try {
-      // Paso 1: Generar el PDF
       const pdfPath = await this.create(createInspeccionDto, documentos);
       const pdfFileName = `Reporte_Inspeccion_${createInspeccionDto.placa}_${createInspeccionDto.fechaRegistro}.pdf`;
       const fileLink = await this.uploadFileToDrive(pdfPath, pdfFileName);
+
+      await this.enviarCorreoConPDF(pdfPath, 'woodyjacques1@gmail.com'); 
 
       await this.saveDataToSheet(
         createInspeccionDto.sucursal,
@@ -221,12 +247,13 @@ export class InspeccionService {
         createInspeccionDto.conductor,
         createInspeccionDto.fechaRegistro,
         createInspeccionDto.identificador,
+        createInspeccionDto.licencias,
         fileLink
       );
 
       fs.unlinkSync(pdfPath);
 
-      return { message: 'Inspección creada exitosamente, archivo subido a Google Drive y enlace guardado en Google Sheets.' };
+      return { message: 'Inspección creada exitosamente, archivo subido a Google Drive, enviado por correo y guardado en Google Sheets.' };
     } catch (error) {
       console.error('Error en el proceso:', error);
       throw new Error('Error en el proceso de manejo de datos');

@@ -4,6 +4,7 @@ export class CreateInspeccionDto {
     readonly conductor: string;
     readonly fechaRegistro: string;
     readonly identificador: string;
+    readonly licencias: string;
     readonly observaciones: string[];  
   }
   

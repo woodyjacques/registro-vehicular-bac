@@ -18,7 +18,6 @@ export class AppService {
     const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
     const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
     const scopes = process.env.GOOGLE_SCOPES?.split(',');
-    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
     if (!clientEmail || !privateKey) {
       throw new Error("Faltan las variables de entorno GOOGLE_CLIENT_EMAIL o GOOGLE_PRIVATE_KEY.");
@@ -95,7 +94,6 @@ export class AppService {
 
       const estado = 'Inspeccionar';
       const reportes = 'No reportado';
-      const salida = 'Registrar';
       const fechaSalida = 'No registrado';
 
       const response = await this.sheets.spreadsheets.values.append({
@@ -114,8 +112,7 @@ export class AppService {
               uniqueIdentifier, 
               linkToSave,    
               estado,        
-              reportes,       
-              salida,         
+              reportes,             
               fechaSalida    
             ]
           ],
