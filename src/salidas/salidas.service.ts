@@ -33,7 +33,7 @@ export class SalidasService {
 
   private async generarPDF(datosPlaca: string[], fechaSalida: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const pdfDir = path.join(__dirname, '..', 'files'); // Ruta al directorio de archivos
+      const pdfDir = path.join(__dirname, '..', 'files'); 
       const pdfPath = path.join(pdfDir, `salida_${datosPlaca[1]}.pdf`);
 
       if (!fs.existsSync(pdfDir)) {
