@@ -1,6 +1,5 @@
-import { Controller, Post, UseInterceptors, UploadedFile, Body, Get } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, Body, Get } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Express } from 'express';
 import { AppService } from './app.service';
 
 @Controller()
@@ -10,21 +9,52 @@ export class AppController {
   @Post('register')
   @UseInterceptors(FileInterceptor('documento'))
   async register(
-    @Body('placa') placa: string,
-    @Body('conductor') conductor: string,
-    @Body('sucursal') sucursal: string,
-    @Body('fechaRegistro') fechaRegistro: string,
-    @Body('uniqueIdentifier') uniqueIdentifier: string,
-    @UploadedFile() documento: Express.Multer.File,
+    @Body() body: any
   ) {
-    const result = await this.appService.handleData(placa, conductor, sucursal, fechaRegistro, uniqueIdentifier, documento);
+    const {
+      placa,
+      conductor,
+      sucursal,
+      tipoVehiculo,
+      horaSalida,
+      odometroSalida,
+      fechaRegistro,
+      uniqueIdentifier,
+      llantasParte1,
+      llantasParte2,
+      fluidos,
+      parametrosVisuales,
+      luces,
+      insumos,
+      documentacion,
+      danosCarroceria
+    } = body;
+
+    const result = await this.appService.handleData(
+      placa,
+      conductor,
+      sucursal,
+      tipoVehiculo,
+      horaSalida,
+      odometroSalida,
+      fechaRegistro,
+      uniqueIdentifier,
+      llantasParte1,
+      llantasParte2,
+      fluidos,
+      parametrosVisuales,
+      luces,
+      insumos,
+      documentacion,
+      danosCarroceria
+    );
 
     return result;
   }
 
   @Get('get-data')
   async getData() {
-    const data = await this.appService.getDataFromSheet();
+    const data = await this.appService.getPlacasFromSheet();
     return data;
   }
 
