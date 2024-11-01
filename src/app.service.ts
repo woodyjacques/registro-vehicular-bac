@@ -123,9 +123,13 @@ export class AppService {
     documentacion: any[],
     danosCarroceria: any[]
   ) {
+
+    this.handleDataSalida(conductor, placa, horaSalida, fechaRegistro, sucursal);
+
     const spreadsheetId = process.env.GOOGLE_SPREADSHEETID;
 
     try {
+      
       await this.sheets.spreadsheets.values.update({
         auth: this.auth,
         spreadsheetId,
@@ -199,7 +203,6 @@ export class AppService {
       if (typeof llantasParte1 === 'string') {
         try {
           llantasParte1 = JSON.parse(llantasParte1);
-          console.log('llantasParte1 convertido a arreglo:', llantasParte1);
         } catch (error) {
           console.error('Error al convertir llantasParte1 a arreglo:', error);
           return;
@@ -235,7 +238,6 @@ export class AppService {
       if (typeof llantasParte2 === 'string') {
         try {
           llantasParte2 = JSON.parse(llantasParte2);
-          console.log('llantasParte2 convertido a arreglo:', llantasParte2);
         } catch (error) {
           console.error('Error al convertir llantasParte2 a arreglo:', error);
           return;
@@ -270,7 +272,6 @@ export class AppService {
       if (typeof fluidos === 'string') {
         try {
           fluidos = JSON.parse(fluidos);
-          console.log('fluidos convertido a arreglo:', fluidos);
         } catch (error) {
           console.error('Error al convertir fluidos a arreglo:', error);
           return;
@@ -305,7 +306,6 @@ export class AppService {
       if (typeof parametrosVisuales === 'string') {
         try {
           parametrosVisuales = JSON.parse(parametrosVisuales);
-          console.log('parametrosVisuales convertido a arreglo:', parametrosVisuales);
         } catch (error) {
           console.error('Error al convertir parametrosVisuales a arreglo:', error);
           return;
@@ -340,7 +340,6 @@ export class AppService {
       if (typeof luces === 'string') {
         try {
           luces = JSON.parse(luces);
-          console.log('luces convertido a arreglo:', luces);
         } catch (error) {
           console.error('Error al convertir luces a arreglo:', error);
           return;
@@ -375,7 +374,6 @@ export class AppService {
       if (typeof insumos === 'string') {
         try {
           insumos = JSON.parse(insumos);
-          console.log('insumos convertido a arreglo:', insumos);
         } catch (error) {
           console.error('Error al convertir insumos a arreglo:', error);
           return;
@@ -409,7 +407,6 @@ export class AppService {
       if (typeof documentacion === 'string') {
         try {
           documentacion = JSON.parse(documentacion);
-          console.log('documentacion convertido a arreglo:', documentacion);
         } catch (error) {
           console.error('Error al convertir documentacion a arreglo:', error);
           return;
@@ -442,7 +439,6 @@ export class AppService {
       if (typeof danosCarroceria === 'string') {
         try {
           danosCarroceria = JSON.parse(danosCarroceria);
-          console.log('carroceria convertido a arreglo:', danosCarroceria);
         } catch (error) {
           console.error('Error al convertir carroceria a arreglo:', error);
           return;
@@ -451,7 +447,7 @@ export class AppService {
 
       if (Array.isArray(danosCarroceria)) {
         const promisesCarroceria = danosCarroceria.map((danio, index) => {
-          const row = 82 + index; // Comienza en la fila 82 para Daños de carrocería
+          const row = 82 + index;
 
           return this.sheets.spreadsheets.values.update({
             auth: this.auth,
@@ -460,11 +456,11 @@ export class AppService {
             valueInputOption: 'RAW',
             requestBody: {
               values: [[
-                danio.vista,                           // Columna A - Nombre de la vista
-                danio.rayones ? 'Sí' : 'No',            // Columna B - Rayones
-                danio.golpes ? 'Sí' : 'No',             // Columna C - Golpes
-                danio.quebrado ? 'Sí' : 'No',           // Columna D - Quebrado
-                danio.faltante ? 'Sí' : 'No'            // Columna E - Faltante
+                danio.vista,
+                danio.rayones ? 'Sí' : 'No',
+                danio.golpes ? 'Sí' : 'No',
+                danio.quebrado ? 'Sí' : 'No',
+                danio.faltante ? 'Sí' : 'No'
               ]],
             },
           });
@@ -475,7 +471,6 @@ export class AppService {
         console.error('Error: carroceria no es un arreglo después de la conversión');
       }
 
-
       console.log('Datos enviados correctamente a Google Sheets.');
     } catch (error) {
       console.error('Error al procesar datos o subir el archivo:', error.response?.data || error.message || error);
@@ -485,8 +480,35 @@ export class AppService {
     return { message: 'Datos procesados y almacenados correctamente en Google Sheets' };
   }
 
+  async handleDataSalida(
+    placa: string,
+    conductor: string,
+    sucursal: string,
+    horaSalida: string,
+    fechaRegistro: string,
+  ) {
 
+    const spreadsheetId = process.env.GOOGLE_SPREADSHEETIDSALIDAS;
 
+    try {
+      await this.sheets.spreadsheets.values.append({
+        auth: this.auth,
+        spreadsheetId,
+        range: 'Hoja 1!A5:F5', 
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [[conductor, placa, horaSalida, fechaRegistro, sucursal, '']], 
+        },
+      });
+
+      console.log('Datos enviados correctamente a Google Sheets.');
+    } catch (error) {
+      console.error('Error al procesar datos o subir el archivo:', error.response?.data || error.message || error);
+      throw new Error('Error al procesar datos o subir el archivo');
+    }
+
+    return { message: 'Datos procesados y almacenados correctamente en Google Sheets' };
+  }
 
 }
 
