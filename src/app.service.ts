@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { google } from 'googleapis';
 import * as dotenv from 'dotenv';
 import { Readable } from 'stream';
+import nodemailer from 'nodemailer'
+import axios from 'axios';
+import { mailerConfig } from './mailer.config';
 
 dotenv.config();
 
@@ -33,7 +36,31 @@ export class AppService {
     console.log("Autenticación inicializada.");
   }
 
-  async uploadFileToDrive(documento: Express.Multer.File) {
+  async getPlacasFromSheet() {
+    const spreadsheetId = process.env.GOOGLE_SPREADSHEETIDPLACAS;
+    const range = 'Lista de Placas!C2:C';
+
+    try {
+      const response = await this.sheets.spreadsheets.values.get({
+        auth: this.auth,
+        spreadsheetId,
+        range,
+      });
+
+      const rows = response.data.values;
+      if (rows.length) {
+        const placas = rows.map((row) => row[0]);
+        return placas;
+      } else {
+        return { message: 'No hay placas disponibles en la hoja.' };
+      }
+    } catch (error) {
+      console.error('Error al obtener las placas de Google Sheets:', error.response?.data || error.message || error);
+      throw new Error('Error al obtener las placas de Google Sheets');
+    }
+  }
+
+  async uploadFileToDrive(documento: { originalname: string; mimetype: string; buffer: Buffer }) {
     return new Promise((resolve, reject) => {
       const drive = google.drive({ version: 'v3', auth: this.auth });
 
@@ -65,7 +92,7 @@ export class AppService {
               requestBody: {
                 role: 'reader',
                 type: 'anyone',
-              }
+              },
             }, (error) => {
               if (error) {
                 console.error('Error al configurar permisos en Google Drive:', error);
@@ -81,29 +108,48 @@ export class AppService {
     });
   }
 
-  async getPlacasFromSheet() {
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEETIDPLACAS;
-    const range = 'Lista de Placas!C2:C';
+  async exportSheetAsPDF(spreadsheetId: string): Promise<Buffer> {
 
-    try {
-      const response = await this.sheets.spreadsheets.values.get({
-        auth: this.auth,
-        spreadsheetId,
-        range,
-      });
+    const auth = new google.auth.JWT(
+      process.env.GOOGLE_CLIENT_EMAIL,
+      null,
+      process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      process.env.GOOGLE_SCOPES?.split(',')
+    );
 
-      const rows = response.data.values;
-      if (rows.length) {
-        const placas = rows.map((row) => row[0]);
-        return placas;
-      } else {
-        return { message: 'No hay placas disponibles en la hoja.' };
-      }
-    } catch (error) {
-      console.error('Error al obtener las placas de Google Sheets:', error.response?.data || error.message || error);
-      throw new Error('Error al obtener las placas de Google Sheets');
-    }
+    await auth.authorize();
+    const token = await auth.getAccessToken();
+
+    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf`;
+
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${token.token}`
+      },
+      responseType: 'arraybuffer'
+    });
+
+    return Buffer.from(response.data, 'binary');
   }
+
+  async sendEmail(pdfBuffer: Buffer, recipientEmail: string, uniqueIdentifier: string) {
+    const transporter = nodemailer.createTransport(mailerConfig.transport);
+  
+    const mailOptions = {
+      from: mailerConfig.transport.auth.user,
+      to: recipientEmail,
+      subject: 'Reporte de Inspección',
+      text: 'Por favor, encuentre el reporte de inspección adjunto en formato PDF.',
+      attachments: [
+        {
+          filename: `reporte_inspeccion_${uniqueIdentifier}.pdf`, 
+          content: pdfBuffer,
+        },
+      ],
+    };
+  
+    return transporter.sendMail(mailOptions);
+  }  
 
   async handleData(
     placa: string,
@@ -121,7 +167,8 @@ export class AppService {
     luces: any[],
     insumos: any[],
     documentacion: any[],
-    danosCarroceria: any[]
+    danosCarroceria: any[],
+    revisiones?: any[]
   ) {
 
     this.handleDataSalida(conductor, placa, horaSalida, fechaRegistro, sucursal);
@@ -129,7 +176,7 @@ export class AppService {
     const spreadsheetId = process.env.GOOGLE_SPREADSHEETID;
 
     try {
-      
+
       await this.sheets.spreadsheets.values.update({
         auth: this.auth,
         spreadsheetId,
@@ -471,7 +518,96 @@ export class AppService {
         console.error('Error: carroceria no es un arreglo después de la conversión');
       }
 
+      if (typeof danosCarroceria === 'string') {
+        try {
+          danosCarroceria = JSON.parse(danosCarroceria);
+        } catch (error) {
+          console.error('Error al convertir carroceria a arreglo:', error);
+          return;
+        }
+      }
+
+      if (Array.isArray(danosCarroceria)) {
+        const promisesCarroceria = danosCarroceria.map((danio, index) => {
+          const row = 82 + index;
+
+          return this.sheets.spreadsheets.values.update({
+            auth: this.auth,
+            spreadsheetId,
+            range: `Sheet1!A${row}:E${row}`,
+            valueInputOption: 'RAW',
+            requestBody: {
+              values: [[
+                danio.vista,
+                danio.rayones ? 'Sí' : 'No',
+                danio.golpes ? 'Sí' : 'No',
+                danio.quebrado ? 'Sí' : 'No',
+                danio.faltante ? 'Sí' : 'No'
+              ]],
+            },
+          });
+        });
+
+        await Promise.all(promisesCarroceria);
+      } else {
+        console.error('Error: carroceria no es un arreglo después de la conversión');
+      }
+
+      if (revisiones) {
+
+        if (typeof revisiones === 'string') {
+          try {
+            revisiones = JSON.parse(revisiones);
+          } catch (error) {
+            console.error('Error al convertir revisiones a arreglo:', error);
+            return;
+          }
+        }
+
+        if (Array.isArray(revisiones)) {
+          const promisesRevisiones = revisiones.map((revision, index) => {
+            const row = 92 + index;
+
+            const siValue = revision.si ? 'Sí' : '';
+            const noValue = revision.no ? 'No' : '';
+
+            return this.sheets.spreadsheets.values.update({
+              auth: this.auth,
+              spreadsheetId,
+              range: `Sheet1!A${row}:D${row}`,
+              valueInputOption: 'RAW',
+              requestBody: {
+                values: [[
+                  revision.descripcion,
+                  siValue,
+                  noValue,
+                  revision.observacion
+                ]],
+              },
+            });
+          });
+
+          await Promise.all(promisesRevisiones);
+        } else {
+          console.error('Error: revisiones no es un arreglo después de la conversión');
+        }
+
+        const pdfBuffer: Buffer = await this.exportSheetAsPDF(spreadsheetId);
+        const driveUploadResult = await this.uploadFileToDrive({
+          originalname: 'reporte_inspeccion.pdf',
+          mimetype: 'application/pdf',
+          buffer: pdfBuffer,
+        });
+
+        console.log('Archivo PDF subido a Google Drive:', driveUploadResult);
+
+        const recipientEmail = 'woodyjacques1@gmail.com';
+        await this.sendEmail(pdfBuffer, recipientEmail, uniqueIdentifier);
+
+        console.log('Correo electrónico enviado con éxito.');
+      }
       console.log('Datos enviados correctamente a Google Sheets.');
+
     } catch (error) {
       console.error('Error al procesar datos o subir el archivo:', error.response?.data || error.message || error);
       throw new Error('Error al procesar datos o subir el archivo');
@@ -494,10 +630,10 @@ export class AppService {
       await this.sheets.spreadsheets.values.append({
         auth: this.auth,
         spreadsheetId,
-        range: 'Hoja 1!A5:F5', 
+        range: 'Hoja 1!A5:F5',
         valueInputOption: 'RAW',
         requestBody: {
-          values: [[conductor, placa, horaSalida, fechaRegistro, sucursal, '']], 
+          values: [[conductor, placa, horaSalida, fechaRegistro, sucursal, '']],
         },
       });
 

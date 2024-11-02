@@ -27,7 +27,8 @@ export class AppController {
       luces,
       insumos,
       documentacion,
-      danosCarroceria
+      danosCarroceria,
+      revisiones
     } = body;
 
     const result = await this.appService.handleData(
@@ -46,7 +47,8 @@ export class AppController {
       luces,
       insumos,
       documentacion,
-      danosCarroceria
+      danosCarroceria,
+      revisiones
     );
 
     return result;
