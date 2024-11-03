@@ -43,7 +43,7 @@ export class AppService {
 
       const mailOptions = {
         from: mailerConfig.transport.auth.user,
-        to: 'woodyjacques1@gmail.com',
+        to: 'vehicularregistro526@gmail.com',
         subject: 'Reporte de Falla Vehicular',
         text: 'Adjunto se encuentra el reporte de falla vehicular en formato .docx.',
         attachments: [
@@ -197,8 +197,10 @@ export class AppService {
     revisiones?: any[]
   ) {
 
-    this.handleDataSalida( placa, conductor, fechaRegistro, sucursal, horaSalida);
-
+    if (!revisiones) { 
+      this.handleDataSalida(placa, conductor, fechaRegistro, sucursal, horaSalida);
+    }
+    
     const spreadsheetId = process.env.GOOGLE_SPREADSHEETID;
 
     try {
@@ -648,7 +650,7 @@ export class AppService {
     fechaRegistro: string,
     sucursal: string,
     horaSalida: string,
-    alerta?:string
+    alerta?: string
   ) {
 
     const spreadsheetId = process.env.GOOGLE_SPREADSHEETIDSALIDAS;
@@ -676,7 +678,7 @@ export class AppService {
   async getDataSalidas() {
 
     const spreadsheetId = process.env.GOOGLE_SPREADSHEETIDSALIDAS;
-    const range = 'Hoja 1!A4:F'; 
+    const range = 'Hoja 1!A4:F';
 
     try {
       const response = await this.sheets.spreadsheets.values.get({
@@ -688,12 +690,12 @@ export class AppService {
       const rows = response.data.values;
       if (rows.length) {
         const registros = rows.map((row) => ({
-          Conductor: row[0] || '', 
-          Placa: row[1] || '',         
-          Hora: row[2] || '', 
-          Fecha: row[3] || '',         
-          Sucursal: row[4] || '',         
-          Alerta: row[5] || '',        
+          Conductor: row[0] || '',
+          Placa: row[1] || '',
+          Hora: row[2] || '',
+          Fecha: row[3] || '',
+          Sucursal: row[4] || '',
+          Alerta: row[5] || '',
         }));
         return registros;
       } else {
