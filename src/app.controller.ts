@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, Body, Get } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, Body, Get, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AppService } from './app.service';
 
@@ -54,9 +54,31 @@ export class AppController {
     return result;
   }
 
+  @Post('reporte')
+  @UseInterceptors(FileInterceptor('file'))
+  async enviarReporte(@UploadedFile() file: Express.Multer.File) {
+    await this.appService.sendDocumentAsEmailAttachment(file);
+    return { message: 'Correo enviado con éxito.' };
+  }
+
+  @Post('registrar-alerta')
+  async registrarAlerta(@Body() body: any) {
+    const {placa, conductor, fechaSalida, sucursal, horaSalida, alerta} = body;
+
+    const result = await this.appService.handleDataSalida(placa, conductor, fechaSalida, sucursal, horaSalida, alerta);
+
+    return result;
+  }
+
   @Get('get-data')
   async getData() {
     const data = await this.appService.getPlacasFromSheet();
+    return data;
+  }
+
+  @Get('get-salidas')
+  async getDataSalidas() {
+    const data = await this.appService.getDataSalidas();
     return data;
   }
 

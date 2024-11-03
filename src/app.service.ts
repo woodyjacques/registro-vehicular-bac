@@ -36,6 +36,32 @@ export class AppService {
     console.log("Autenticación inicializada.");
   }
 
+  async sendDocumentAsEmailAttachment(file: Express.Multer.File): Promise<void> {
+    try {
+
+      const transporter = nodemailer.createTransport(mailerConfig.transport);
+
+      const mailOptions = {
+        from: mailerConfig.transport.auth.user,
+        to: 'woodyjacques1@gmail.com',
+        subject: 'Reporte de Falla Vehicular',
+        text: 'Adjunto se encuentra el reporte de falla vehicular en formato .docx.',
+        attachments: [
+          {
+            filename: file.originalname,
+            content: file.buffer,
+          },
+        ],
+      };
+
+      console.log('Correo enviado con éxito.');
+      return transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error('Error al enviar el correo:', error);
+      throw new Error('No se pudo enviar el correo.');
+    }
+  }
+
   async getPlacasFromSheet() {
     const spreadsheetId = process.env.GOOGLE_SPREADSHEETIDPLACAS;
     const range = 'Lista de Placas!C2:C';
@@ -134,7 +160,7 @@ export class AppService {
 
   async sendEmail(pdfBuffer: Buffer, recipientEmail: string, uniqueIdentifier: string) {
     const transporter = nodemailer.createTransport(mailerConfig.transport);
-  
+
     const mailOptions = {
       from: mailerConfig.transport.auth.user,
       to: recipientEmail,
@@ -142,14 +168,14 @@ export class AppService {
       text: 'Por favor, encuentre el reporte de inspección adjunto en formato PDF.',
       attachments: [
         {
-          filename: `reporte_inspeccion_${uniqueIdentifier}.pdf`, 
+          filename: `reporte_inspeccion_${uniqueIdentifier}.pdf`,
           content: pdfBuffer,
         },
       ],
     };
-  
+
     return transporter.sendMail(mailOptions);
-  }  
+  }
 
   async handleData(
     placa: string,
@@ -171,7 +197,7 @@ export class AppService {
     revisiones?: any[]
   ) {
 
-    this.handleDataSalida(conductor, placa, horaSalida, fechaRegistro, sucursal);
+    this.handleDataSalida( placa, conductor, fechaRegistro, sucursal, horaSalida);
 
     const spreadsheetId = process.env.GOOGLE_SPREADSHEETID;
 
@@ -619,9 +645,10 @@ export class AppService {
   async handleDataSalida(
     placa: string,
     conductor: string,
+    fechaRegistro: string,
     sucursal: string,
     horaSalida: string,
-    fechaRegistro: string,
+    alerta?:string
   ) {
 
     const spreadsheetId = process.env.GOOGLE_SPREADSHEETIDSALIDAS;
@@ -633,7 +660,7 @@ export class AppService {
         range: 'Hoja 1!A5:F5',
         valueInputOption: 'RAW',
         requestBody: {
-          values: [[conductor, placa, horaSalida, fechaRegistro, sucursal, '']],
+          values: [[conductor, placa, horaSalida, fechaRegistro, sucursal, alerta]],
         },
       });
 
@@ -646,8 +673,39 @@ export class AppService {
     return { message: 'Datos procesados y almacenados correctamente en Google Sheets' };
   }
 
-}
+  async getDataSalidas() {
 
+    const spreadsheetId = process.env.GOOGLE_SPREADSHEETIDSALIDAS;
+    const range = 'Hoja 1!A4:F'; 
+
+    try {
+      const response = await this.sheets.spreadsheets.values.get({
+        auth: this.auth,
+        spreadsheetId,
+        range,
+      });
+
+      const rows = response.data.values;
+      if (rows.length) {
+        const registros = rows.map((row) => ({
+          Conductor: row[0] || '', 
+          Placa: row[1] || '',         
+          Hora: row[2] || '', 
+          Fecha: row[3] || '',         
+          Sucursal: row[4] || '',         
+          Alerta: row[5] || '',        
+        }));
+        return registros;
+      } else {
+        return { message: 'No hay registros disponibles en la hoja.' };
+      }
+    } catch (error) {
+      console.error('Error al obtener los registros de Google Sheets:', error.response?.data || error.message || error);
+      throw new Error('Error al obtener los registros de Google Sheets');
+    }
+  }
+
+}
 
 // const response = await this.sheets.spreadsheets.get({
 //   auth: this.auth,
