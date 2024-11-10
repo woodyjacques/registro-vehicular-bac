@@ -12,43 +12,15 @@ export class AppController {
     @Body() body: any
   ) {
     const {
-      placa,
-      conductor,
-      sucursal,
-      tipoVehiculo,
-      horaSalida,
-      odometroSalida,
-      fechaRegistro,
-      uniqueIdentifier,
-      llantasParte1,
-      llantasParte2,
-      fluidos,
-      parametrosVisuales,
-      luces,
-      insumos,
-      documentacion,
-      danosCarroceria,
-      revisiones
+      placa, conductor, sucursal, tipoVehiculo, odometroSalida,
+      llantasParte1, llantasParte2, fluidos, parametrosVisuales, luces,
+      insumos, documentacion, danosCarroceria
     } = body;
 
     const result = await this.appService.handleData(
-      placa,
-      conductor,
-      sucursal,
-      tipoVehiculo,
-      horaSalida,
-      odometroSalida,
-      fechaRegistro,
-      uniqueIdentifier,
-      llantasParte1,
-      llantasParte2,
-      fluidos,
-      parametrosVisuales,
-      luces,
-      insumos,
-      documentacion,
-      danosCarroceria,
-      revisiones
+      placa, conductor, sucursal, tipoVehiculo, odometroSalida,
+      llantasParte1, llantasParte2, fluidos, parametrosVisuales, luces,
+      insumos, documentacion, danosCarroceria
     );
 
     return result;
@@ -63,7 +35,7 @@ export class AppController {
 
   @Post('registrar-alerta')
   async registrarAlerta(@Body() body: any) {
-    const {placa, conductor, fechaSalida, sucursal, horaSalida, alerta} = body;
+    const { placa, conductor, fechaSalida, sucursal, horaSalida, alerta } = body;
 
     const result = await this.appService.handleDataSalida(placa, conductor, fechaSalida, sucursal, horaSalida, alerta);
 

@@ -177,472 +177,472 @@ export class AppService {
     return transporter.sendMail(mailOptions);
   }
 
-  async handleData(
-    placa: string,
-    conductor: string,
-    sucursal: string,
-    tipoVehiculo: string,
-    horaSalida: string,
-    odometroSalida: string,
-    fechaRegistro: string,
-    uniqueIdentifier: string,
-    llantasParte1: any[],
-    llantasParte2: any[],
-    fluidos: any[],
-    parametrosVisuales: any[],
-    luces: any[],
-    insumos: any[],
-    documentacion: any[],
-    danosCarroceria: any[],
-    revisiones?: any[]
-  ) {
+  // async handleData(
+  //   placa: string,
+  //   conductor: string,
+  //   sucursal: string,
+  //   tipoVehiculo: string,
+  //   horaSalida: string,
+  //   odometroSalida: string,
+  //   fechaRegistro: string,
+  //   uniqueIdentifier: string,
+  //   llantasParte1: any[],
+  //   llantasParte2: any[],
+  //   fluidos: any[],
+  //   parametrosVisuales: any[],
+  //   luces: any[],
+  //   insumos: any[],
+  //   documentacion: any[],
+  //   danosCarroceria: any[],
+  //   revisiones?: any[]
+  // ) {
 
-    if (!revisiones) { 
-      this.handleDataSalida(placa, conductor, fechaRegistro, sucursal, horaSalida);
-    }
-    
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEETID;
+  //   if (!revisiones) {
+  //     this.handleDataSalida(placa, conductor, fechaRegistro, sucursal, horaSalida);
+  //   }
 
-    try {
+  //   const spreadsheetId = process.env.GOOGLE_SPREADSHEETID;
 
-      await this.sheets.spreadsheets.values.update({
-        auth: this.auth,
-        spreadsheetId,
-        range: 'Sheet1!B5',
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[sucursal]],
-        },
-      });
+  //   try {
 
-      await this.sheets.spreadsheets.values.update({
-        auth: this.auth,
-        spreadsheetId,
-        range: 'Sheet1!B6',
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[conductor]],
-        },
-      });
+  //     await this.sheets.spreadsheets.values.update({
+  //       auth: this.auth,
+  //       spreadsheetId,
+  //       range: 'Sheet1!B5',
+  //       valueInputOption: 'RAW',
+  //       requestBody: {
+  //         values: [[sucursal]],
+  //       },
+  //     });
 
-      await this.sheets.spreadsheets.values.update({
-        auth: this.auth,
-        spreadsheetId,
-        range: 'Sheet1!B7',
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[fechaRegistro]],
-        },
-      });
+  //     await this.sheets.spreadsheets.values.update({
+  //       auth: this.auth,
+  //       spreadsheetId,
+  //       range: 'Sheet1!B6',
+  //       valueInputOption: 'RAW',
+  //       requestBody: {
+  //         values: [[conductor]],
+  //       },
+  //     });
 
-      await this.sheets.spreadsheets.values.update({
-        auth: this.auth,
-        spreadsheetId,
-        range: 'Sheet1!B8',
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[horaSalida]],
-        },
-      });
+  //     await this.sheets.spreadsheets.values.update({
+  //       auth: this.auth,
+  //       spreadsheetId,
+  //       range: 'Sheet1!B7',
+  //       valueInputOption: 'RAW',
+  //       requestBody: {
+  //         values: [[fechaRegistro]],
+  //       },
+  //     });
 
-      await this.sheets.spreadsheets.values.update({
-        auth: this.auth,
-        spreadsheetId,
-        range: 'Sheet1!B9',
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[odometroSalida]],
-        },
-      });
+  //     await this.sheets.spreadsheets.values.update({
+  //       auth: this.auth,
+  //       spreadsheetId,
+  //       range: 'Sheet1!B8',
+  //       valueInputOption: 'RAW',
+  //       requestBody: {
+  //         values: [[horaSalida]],
+  //       },
+  //     });
 
-      await this.sheets.spreadsheets.values.update({
-        auth: this.auth,
-        spreadsheetId,
-        range: 'Sheet1!B10',
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[placa]],
-        },
-      });
+  //     await this.sheets.spreadsheets.values.update({
+  //       auth: this.auth,
+  //       spreadsheetId,
+  //       range: 'Sheet1!B9',
+  //       valueInputOption: 'RAW',
+  //       requestBody: {
+  //         values: [[odometroSalida]],
+  //       },
+  //     });
 
-      await this.sheets.spreadsheets.values.update({
-        auth: this.auth,
-        spreadsheetId,
-        range: 'Sheet1!B11',
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[tipoVehiculo]],
-        },
-      });
+  //     await this.sheets.spreadsheets.values.update({
+  //       auth: this.auth,
+  //       spreadsheetId,
+  //       range: 'Sheet1!B10',
+  //       valueInputOption: 'RAW',
+  //       requestBody: {
+  //         values: [[placa]],
+  //       },
+  //     });
 
-      if (typeof llantasParte1 === 'string') {
-        try {
-          llantasParte1 = JSON.parse(llantasParte1);
-        } catch (error) {
-          console.error('Error al convertir llantasParte1 a arreglo:', error);
-          return;
-        }
-      }
+  //     await this.sheets.spreadsheets.values.update({
+  //       auth: this.auth,
+  //       spreadsheetId,
+  //       range: 'Sheet1!B11',
+  //       valueInputOption: 'RAW',
+  //       requestBody: {
+  //         values: [[tipoVehiculo]],
+  //       },
+  //     });
 
-      if (Array.isArray(llantasParte1)) {
-        const promisesParte1 = llantasParte1.map((llanta, index) => {
-          const row = 16 + index;
+  //     if (typeof llantasParte1 === 'string') {
+  //       try {
+  //         llantasParte1 = JSON.parse(llantasParte1);
+  //       } catch (error) {
+  //         console.error('Error al convertir llantasParte1 a arreglo:', error);
+  //         return;
+  //       }
+  //     }
 
-          return this.sheets.spreadsheets.values.update({
-            auth: this.auth,
-            spreadsheetId,
-            range: `Sheet1!B${row}:F${row}`,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: [[
-                llanta.fp ? 'Sí' : 'No',
-                llanta.pe ? 'Sí' : 'No',
-                llanta.pa ? 'Sí' : 'No',
-                llanta.desgaste ? 'Sí' : 'No',
-                llanta.observacion || '',
-              ]],
-            },
-          });
-        });
+  //     if (Array.isArray(llantasParte1)) {
+  //       const promisesParte1 = llantasParte1.map((llanta, index) => {
+  //         const row = 16 + index;
 
-        await Promise.all(promisesParte1);
-      } else {
-        console.error('Error: llantasParte1 no es un arreglo después de la conversión');
-      }
+  //         return this.sheets.spreadsheets.values.update({
+  //           auth: this.auth,
+  //           spreadsheetId,
+  //           range: `Sheet1!B${row}:F${row}`,
+  //           valueInputOption: 'RAW',
+  //           requestBody: {
+  //             values: [[
+  //               llanta.fp ? 'Sí' : 'No',
+  //               llanta.pe ? 'Sí' : 'No',
+  //               llanta.pa ? 'Sí' : 'No',
+  //               llanta.desgaste ? 'Sí' : 'No',
+  //               llanta.observacion || '',
+  //             ]],
+  //           },
+  //         });
+  //       });
 
-      if (typeof llantasParte2 === 'string') {
-        try {
-          llantasParte2 = JSON.parse(llantasParte2);
-        } catch (error) {
-          console.error('Error al convertir llantasParte2 a arreglo:', error);
-          return;
-        }
-      }
+  //       await Promise.all(promisesParte1);
+  //     } else {
+  //       console.error('Error: llantasParte1 no es un arreglo después de la conversión');
+  //     }
 
-      if (Array.isArray(llantasParte2)) {
-        const promisesParte2 = llantasParte2.map((llanta, index) => {
-          const row = 21 + index;
+  //     if (typeof llantasParte2 === 'string') {
+  //       try {
+  //         llantasParte2 = JSON.parse(llantasParte2);
+  //       } catch (error) {
+  //         console.error('Error al convertir llantasParte2 a arreglo:', error);
+  //         return;
+  //       }
+  //     }
 
-          return this.sheets.spreadsheets.values.update({
-            auth: this.auth,
-            spreadsheetId,
-            range: `Sheet1!B${row}:F${row}`,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: [[
-                llanta.fp ? 'Sí' : 'No',
-                llanta.pe ? 'Sí' : 'No',
-                llanta.pa ? 'Sí' : 'No',
-                llanta.desgaste ? 'Sí' : 'No',
-                llanta.observacion || '',
-              ]],
-            },
-          });
-        });
-        await Promise.all(promisesParte2);
-      } else {
-        console.error('Error: llantasParte2 no es un arreglo después de la conversión');
-      }
+  //     if (Array.isArray(llantasParte2)) {
+  //       const promisesParte2 = llantasParte2.map((llanta, index) => {
+  //         const row = 21 + index;
 
-      if (typeof fluidos === 'string') {
-        try {
-          fluidos = JSON.parse(fluidos);
-        } catch (error) {
-          console.error('Error al convertir fluidos a arreglo:', error);
-          return;
-        }
-      }
+  //         return this.sheets.spreadsheets.values.update({
+  //           auth: this.auth,
+  //           spreadsheetId,
+  //           range: `Sheet1!B${row}:F${row}`,
+  //           valueInputOption: 'RAW',
+  //           requestBody: {
+  //             values: [[
+  //               llanta.fp ? 'Sí' : 'No',
+  //               llanta.pe ? 'Sí' : 'No',
+  //               llanta.pa ? 'Sí' : 'No',
+  //               llanta.desgaste ? 'Sí' : 'No',
+  //               llanta.observacion || '',
+  //             ]],
+  //           },
+  //         });
+  //       });
+  //       await Promise.all(promisesParte2);
+  //     } else {
+  //       console.error('Error: llantasParte2 no es un arreglo después de la conversión');
+  //     }
 
-      if (Array.isArray(fluidos)) {
-        const promisesFluidos = fluidos.map((fluido, index) => {
-          const row = 30 + index;
+  //     if (typeof fluidos === 'string') {
+  //       try {
+  //         fluidos = JSON.parse(fluidos);
+  //       } catch (error) {
+  //         console.error('Error al convertir fluidos a arreglo:', error);
+  //         return;
+  //       }
+  //     }
 
-          return this.sheets.spreadsheets.values.update({
-            auth: this.auth,
-            spreadsheetId,
-            range: `Sheet1!A${row}:D${row}`,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: [[
-                fluido.nombre,
-                fluido.requiere ? 'Sí' : 'No',
-                fluido.lleno ? 'Sí' : 'No',
-                fluido.observacion || '',
-              ]],
-            },
-          });
-        });
+  //     if (Array.isArray(fluidos)) {
+  //       const promisesFluidos = fluidos.map((fluido, index) => {
+  //         const row = 30 + index;
 
-        await Promise.all(promisesFluidos);
-      } else {
-        console.error('Error: fluidos no es un arreglo después de la conversión');
-      }
+  //         return this.sheets.spreadsheets.values.update({
+  //           auth: this.auth,
+  //           spreadsheetId,
+  //           range: `Sheet1!A${row}:D${row}`,
+  //           valueInputOption: 'RAW',
+  //           requestBody: {
+  //             values: [[
+  //               fluido.nombre,
+  //               fluido.requiere ? 'Sí' : 'No',
+  //               fluido.lleno ? 'Sí' : 'No',
+  //               fluido.observacion || '',
+  //             ]],
+  //           },
+  //         });
+  //       });
 
-      if (typeof parametrosVisuales === 'string') {
-        try {
-          parametrosVisuales = JSON.parse(parametrosVisuales);
-        } catch (error) {
-          console.error('Error al convertir parametrosVisuales a arreglo:', error);
-          return;
-        }
-      }
+  //       await Promise.all(promisesFluidos);
+  //     } else {
+  //       console.error('Error: fluidos no es un arreglo después de la conversión');
+  //     }
 
-      if (Array.isArray(parametrosVisuales)) {
-        const promisesParametros = parametrosVisuales.map((parametro, index) => {
-          const row = 38 + index;
+  //     if (typeof parametrosVisuales === 'string') {
+  //       try {
+  //         parametrosVisuales = JSON.parse(parametrosVisuales);
+  //       } catch (error) {
+  //         console.error('Error al convertir parametrosVisuales a arreglo:', error);
+  //         return;
+  //       }
+  //     }
 
-          return this.sheets.spreadsheets.values.update({
-            auth: this.auth,
-            spreadsheetId,
-            range: `Sheet1!A${row}:D${row}`,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: [[
-                parametro.nombre,
-                parametro.si ? 'Sí' : 'No',
-                parametro.no ? 'Sí' : 'No',
-                parametro.observacion || '',
-              ]],
-            },
-          });
-        });
+  //     if (Array.isArray(parametrosVisuales)) {
+  //       const promisesParametros = parametrosVisuales.map((parametro, index) => {
+  //         const row = 38 + index;
 
-        await Promise.all(promisesParametros);
-      } else {
-        console.error('Error: parametrosVisuales no es un arreglo después de la conversión');
-      }
+  //         return this.sheets.spreadsheets.values.update({
+  //           auth: this.auth,
+  //           spreadsheetId,
+  //           range: `Sheet1!A${row}:D${row}`,
+  //           valueInputOption: 'RAW',
+  //           requestBody: {
+  //             values: [[
+  //               parametro.nombre,
+  //               parametro.si ? 'Sí' : 'No',
+  //               parametro.no ? 'Sí' : 'No',
+  //               parametro.observacion || '',
+  //             ]],
+  //           },
+  //         });
+  //       });
 
-      if (typeof luces === 'string') {
-        try {
-          luces = JSON.parse(luces);
-        } catch (error) {
-          console.error('Error al convertir luces a arreglo:', error);
-          return;
-        }
-      }
+  //       await Promise.all(promisesParametros);
+  //     } else {
+  //       console.error('Error: parametrosVisuales no es un arreglo después de la conversión');
+  //     }
 
-      if (Array.isArray(luces)) {
-        const promisesLuces = luces.map((luz, index) => {
-          const row = 46 + index;
+  //     if (typeof luces === 'string') {
+  //       try {
+  //         luces = JSON.parse(luces);
+  //       } catch (error) {
+  //         console.error('Error al convertir luces a arreglo:', error);
+  //         return;
+  //       }
+  //     }
 
-          return this.sheets.spreadsheets.values.update({
-            auth: this.auth,
-            spreadsheetId,
-            range: `Sheet1!A${row}:D${row}`,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: [[
-                luz.nombre,
-                luz.funcionaSi ? 'Sí' : 'No',
-                luz.funcionaNo ? 'Sí' : 'No',
-                luz.observacion || '',
-              ]],
-            },
-          });
-        });
+  //     if (Array.isArray(luces)) {
+  //       const promisesLuces = luces.map((luz, index) => {
+  //         const row = 46 + index;
 
-        await Promise.all(promisesLuces);
-      } else {
-        console.error('Error: luces no es un arreglo después de la conversión');
-      }
+  //         return this.sheets.spreadsheets.values.update({
+  //           auth: this.auth,
+  //           spreadsheetId,
+  //           range: `Sheet1!A${row}:D${row}`,
+  //           valueInputOption: 'RAW',
+  //           requestBody: {
+  //             values: [[
+  //               luz.nombre,
+  //               luz.funcionaSi ? 'Sí' : 'No',
+  //               luz.funcionaNo ? 'Sí' : 'No',
+  //               luz.observacion || '',
+  //             ]],
+  //           },
+  //         });
+  //       });
 
-      if (typeof insumos === 'string') {
-        try {
-          insumos = JSON.parse(insumos);
-        } catch (error) {
-          console.error('Error al convertir insumos a arreglo:', error);
-          return;
-        }
-      }
+  //       await Promise.all(promisesLuces);
+  //     } else {
+  //       console.error('Error: luces no es un arreglo después de la conversión');
+  //     }
 
-      if (Array.isArray(insumos)) {
-        const promisesInsumos = insumos.map((insumo, index) => {
-          const row = 58 + index;
+  //     if (typeof insumos === 'string') {
+  //       try {
+  //         insumos = JSON.parse(insumos);
+  //       } catch (error) {
+  //         console.error('Error al convertir insumos a arreglo:', error);
+  //         return;
+  //       }
+  //     }
 
-          return this.sheets.spreadsheets.values.update({
-            auth: this.auth,
-            spreadsheetId,
-            range: `Sheet1!A${row}:C${row}`,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: [[
-                insumo.nombre,
-                insumo.disponibleSi ? 'Sí' : 'No',
-                insumo.disponibleNo ? 'Sí' : 'No',
-              ]],
-            },
-          });
-        });
+  //     if (Array.isArray(insumos)) {
+  //       const promisesInsumos = insumos.map((insumo, index) => {
+  //         const row = 58 + index;
 
-        await Promise.all(promisesInsumos);
-      } else {
-        console.error('Error: insumos no es un arreglo después de la conversión');
-      }
+  //         return this.sheets.spreadsheets.values.update({
+  //           auth: this.auth,
+  //           spreadsheetId,
+  //           range: `Sheet1!A${row}:C${row}`,
+  //           valueInputOption: 'RAW',
+  //           requestBody: {
+  //             values: [[
+  //               insumo.nombre,
+  //               insumo.disponibleSi ? 'Sí' : 'No',
+  //               insumo.disponibleNo ? 'Sí' : 'No',
+  //             ]],
+  //           },
+  //         });
+  //       });
 
-      if (typeof documentacion === 'string') {
-        try {
-          documentacion = JSON.parse(documentacion);
-        } catch (error) {
-          console.error('Error al convertir documentacion a arreglo:', error);
-          return;
-        }
-      }
+  //       await Promise.all(promisesInsumos);
+  //     } else {
+  //       console.error('Error: insumos no es un arreglo después de la conversión');
+  //     }
 
-      if (Array.isArray(documentacion)) {
-        const promisesDocumentacion = documentacion.map((doc, index) => {
-          const row = 70 + index;
-          return this.sheets.spreadsheets.values.update({
-            auth: this.auth,
-            spreadsheetId,
-            range: `Sheet1!A${row}:C${row}`,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: [[
-                doc.nombre,
-                doc.disponibleSi ? 'Sí' : 'No',
-                doc.disponibleNo ? 'Sí' : 'No',
-              ]],
-            },
-          });
-        });
+  //     if (typeof documentacion === 'string') {
+  //       try {
+  //         documentacion = JSON.parse(documentacion);
+  //       } catch (error) {
+  //         console.error('Error al convertir documentacion a arreglo:', error);
+  //         return;
+  //       }
+  //     }
 
-        await Promise.all(promisesDocumentacion);
-      } else {
-        console.error('Error: documentacion no es un arreglo después de la conversión');
-      }
+  //     if (Array.isArray(documentacion)) {
+  //       const promisesDocumentacion = documentacion.map((doc, index) => {
+  //         const row = 70 + index;
+  //         return this.sheets.spreadsheets.values.update({
+  //           auth: this.auth,
+  //           spreadsheetId,
+  //           range: `Sheet1!A${row}:C${row}`,
+  //           valueInputOption: 'RAW',
+  //           requestBody: {
+  //             values: [[
+  //               doc.nombre,
+  //               doc.disponibleSi ? 'Sí' : 'No',
+  //               doc.disponibleNo ? 'Sí' : 'No',
+  //             ]],
+  //           },
+  //         });
+  //       });
 
-      if (typeof danosCarroceria === 'string') {
-        try {
-          danosCarroceria = JSON.parse(danosCarroceria);
-        } catch (error) {
-          console.error('Error al convertir carroceria a arreglo:', error);
-          return;
-        }
-      }
+  //       await Promise.all(promisesDocumentacion);
+  //     } else {
+  //       console.error('Error: documentacion no es un arreglo después de la conversión');
+  //     }
 
-      if (Array.isArray(danosCarroceria)) {
-        const promisesCarroceria = danosCarroceria.map((danio, index) => {
-          const row = 82 + index;
+  //     if (typeof danosCarroceria === 'string') {
+  //       try {
+  //         danosCarroceria = JSON.parse(danosCarroceria);
+  //       } catch (error) {
+  //         console.error('Error al convertir carroceria a arreglo:', error);
+  //         return;
+  //       }
+  //     }
 
-          return this.sheets.spreadsheets.values.update({
-            auth: this.auth,
-            spreadsheetId,
-            range: `Sheet1!A${row}:E${row}`,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: [[
-                danio.vista,
-                danio.rayones ? 'Sí' : 'No',
-                danio.golpes ? 'Sí' : 'No',
-                danio.quebrado ? 'Sí' : 'No',
-                danio.faltante ? 'Sí' : 'No'
-              ]],
-            },
-          });
-        });
+  //     if (Array.isArray(danosCarroceria)) {
+  //       const promisesCarroceria = danosCarroceria.map((danio, index) => {
+  //         const row = 82 + index;
 
-        await Promise.all(promisesCarroceria);
-      } else {
-        console.error('Error: carroceria no es un arreglo después de la conversión');
-      }
+  //         return this.sheets.spreadsheets.values.update({
+  //           auth: this.auth,
+  //           spreadsheetId,
+  //           range: `Sheet1!A${row}:E${row}`,
+  //           valueInputOption: 'RAW',
+  //           requestBody: {
+  //             values: [[
+  //               danio.vista,
+  //               danio.rayones ? 'Sí' : 'No',
+  //               danio.golpes ? 'Sí' : 'No',
+  //               danio.quebrado ? 'Sí' : 'No',
+  //               danio.faltante ? 'Sí' : 'No'
+  //             ]],
+  //           },
+  //         });
+  //       });
 
-      if (typeof danosCarroceria === 'string') {
-        try {
-          danosCarroceria = JSON.parse(danosCarroceria);
-        } catch (error) {
-          console.error('Error al convertir carroceria a arreglo:', error);
-          return;
-        }
-      }
+  //       await Promise.all(promisesCarroceria);
+  //     } else {
+  //       console.error('Error: carroceria no es un arreglo después de la conversión');
+  //     }
 
-      if (Array.isArray(danosCarroceria)) {
-        const promisesCarroceria = danosCarroceria.map((danio, index) => {
-          const row = 82 + index;
+  //     if (typeof danosCarroceria === 'string') {
+  //       try {
+  //         danosCarroceria = JSON.parse(danosCarroceria);
+  //       } catch (error) {
+  //         console.error('Error al convertir carroceria a arreglo:', error);
+  //         return;
+  //       }
+  //     }
 
-          return this.sheets.spreadsheets.values.update({
-            auth: this.auth,
-            spreadsheetId,
-            range: `Sheet1!A${row}:E${row}`,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: [[
-                danio.vista,
-                danio.rayones ? 'Sí' : 'No',
-                danio.golpes ? 'Sí' : 'No',
-                danio.quebrado ? 'Sí' : 'No',
-                danio.faltante ? 'Sí' : 'No'
-              ]],
-            },
-          });
-        });
+  //     if (Array.isArray(danosCarroceria)) {
+  //       const promisesCarroceria = danosCarroceria.map((danio, index) => {
+  //         const row = 82 + index;
 
-        await Promise.all(promisesCarroceria);
-      } else {
-        console.error('Error: carroceria no es un arreglo después de la conversión');
-      }
+  //         return this.sheets.spreadsheets.values.update({
+  //           auth: this.auth,
+  //           spreadsheetId,
+  //           range: `Sheet1!A${row}:E${row}`,
+  //           valueInputOption: 'RAW',
+  //           requestBody: {
+  //             values: [[
+  //               danio.vista,
+  //               danio.rayones ? 'Sí' : 'No',
+  //               danio.golpes ? 'Sí' : 'No',
+  //               danio.quebrado ? 'Sí' : 'No',
+  //               danio.faltante ? 'Sí' : 'No'
+  //             ]],
+  //           },
+  //         });
+  //       });
 
-      if (revisiones) {
+  //       await Promise.all(promisesCarroceria);
+  //     } else {
+  //       console.error('Error: carroceria no es un arreglo después de la conversión');
+  //     }
 
-        if (typeof revisiones === 'string') {
-          try {
-            revisiones = JSON.parse(revisiones);
-          } catch (error) {
-            console.error('Error al convertir revisiones a arreglo:', error);
-            return;
-          }
-        }
+  //     if (revisiones) {
 
-        if (Array.isArray(revisiones)) {
-          const promisesRevisiones = revisiones.map((revision, index) => {
-            const row = 92 + index;
+  //       if (typeof revisiones === 'string') {
+  //         try {
+  //           revisiones = JSON.parse(revisiones);
+  //         } catch (error) {
+  //           console.error('Error al convertir revisiones a arreglo:', error);
+  //           return;
+  //         }
+  //       }
 
-            const siValue = revision.si ? 'Sí' : '';
-            const noValue = revision.no ? 'No' : '';
+  //       if (Array.isArray(revisiones)) {
+  //         const promisesRevisiones = revisiones.map((revision, index) => {
+  //           const row = 92 + index;
 
-            return this.sheets.spreadsheets.values.update({
-              auth: this.auth,
-              spreadsheetId,
-              range: `Sheet1!A${row}:D${row}`,
-              valueInputOption: 'RAW',
-              requestBody: {
-                values: [[
-                  revision.descripcion,
-                  siValue,
-                  noValue,
-                  revision.observacion
-                ]],
-              },
-            });
-          });
+  //           const siValue = revision.si ? 'Sí' : '';
+  //           const noValue = revision.no ? 'No' : '';
 
-          await Promise.all(promisesRevisiones);
-        } else {
-          console.error('Error: revisiones no es un arreglo después de la conversión');
-        }
+  //           return this.sheets.spreadsheets.values.update({
+  //             auth: this.auth,
+  //             spreadsheetId,
+  //             range: `Sheet1!A${row}:D${row}`,
+  //             valueInputOption: 'RAW',
+  //             requestBody: {
+  //               values: [[
+  //                 revision.descripcion,
+  //                 siValue,
+  //                 noValue,
+  //                 revision.observacion
+  //               ]],
+  //             },
+  //           });
+  //         });
 
-        const pdfBuffer: Buffer = await this.exportSheetAsPDF(spreadsheetId);
-        const driveUploadResult = await this.uploadFileToDrive({
-          originalname: 'reporte_inspeccion.pdf',
-          mimetype: 'application/pdf',
-          buffer: pdfBuffer,
-        });
+  //         await Promise.all(promisesRevisiones);
+  //       } else {
+  //         console.error('Error: revisiones no es un arreglo después de la conversión');
+  //       }
 
-        console.log('Archivo PDF subido a Google Drive:', driveUploadResult);
+  //       const pdfBuffer: Buffer = await this.exportSheetAsPDF(spreadsheetId);
+  //       const driveUploadResult = await this.uploadFileToDrive({
+  //         originalname: 'reporte_inspeccion.pdf',
+  //         mimetype: 'application/pdf',
+  //         buffer: pdfBuffer,
+  //       });
 
-        const recipientEmail = 'woodyjacques1@gmail.com';
-        await this.sendEmail(pdfBuffer, recipientEmail, uniqueIdentifier);
+  //       console.log('Archivo PDF subido a Google Drive:', driveUploadResult);
 
-        console.log('Correo electrónico enviado con éxito.');
-      }
-      console.log('Datos enviados correctamente a Google Sheets.');
+  //       const recipientEmail = 'woodyjacques1@gmail.com';
+  //       await this.sendEmail(pdfBuffer, recipientEmail, uniqueIdentifier);
 
-    } catch (error) {
-      console.error('Error al procesar datos o subir el archivo:', error.response?.data || error.message || error);
-      throw new Error('Error al procesar datos o subir el archivo');
-    }
+  //       console.log('Correo electrónico enviado con éxito.');
+  //     }
+  //     console.log('Datos enviados correctamente a Google Sheets.');
 
-    return { message: 'Datos procesados y almacenados correctamente en Google Sheets' };
-  }
+  //   } catch (error) {
+  //     console.error('Error al procesar datos o subir el archivo:', error.response?.data || error.message || error);
+  //     throw new Error('Error al procesar datos o subir el archivo');
+  //   }
+
+  //   return { message: 'Datos procesados y almacenados correctamente en Google Sheets' };
+  // }
 
   async handleDataSalida(
     placa: string,
@@ -706,6 +706,39 @@ export class AppService {
       throw new Error('Error al obtener los registros de Google Sheets');
     }
   }
+
+
+  async handleData(
+    placa: string,
+    conductor: string,
+    sucursal: string,
+    tipoVehiculo: string,
+    odometroSalida: string,
+    llantasParte1: any[],
+    llantasParte2: any[],
+    fluidos: any[],
+    parametrosVisuales: any[],
+    luces: any[],
+    insumos: any[],
+    documentacion: any[],
+    danosCarroceria: any[]
+  ) {
+
+    // const spreadsheetId = process.env.GOOGLE_SPREADSHEETID;
+
+    try {
+      console.log( placa, conductor, sucursal, tipoVehiculo, odometroSalida,
+        llantasParte1, llantasParte2, fluidos, parametrosVisuales, luces,
+        insumos, documentacion, danosCarroceria, "Datos llegan a servicios");
+      console.log('Datos enviados correctamente a Google Sheets.');
+    } catch (error) {
+      console.error('Error al procesar datos o subir el archivo:', error.response?.data || error.message || error);
+      throw new Error('Error al procesar datos o subir el archivo');
+    }
+
+    return { message: 'Datos procesados y almacenados correctamente en Google Sheets' };
+  }
+
 
 }
 
