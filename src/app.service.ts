@@ -707,7 +707,6 @@ export class AppService {
     }
   }
 
-
   async handleData(
     placa: string,
     conductor: string,
@@ -716,23 +715,108 @@ export class AppService {
     odometroSalida: string,
     llantasParte1: any[],
     llantasParte2: any[],
+    observacionGeneralLlantas: string,
     fluidos: any[],
-    parametrosVisuales: any[],
-    luces: any[],
-    insumos: any[],
-    documentacion: any[],
-    danosCarroceria: any[]
+    observacionGeneralFluido: string,
   ) {
-
-    // const spreadsheetId = process.env.GOOGLE_SPREADSHEETID;
+    const spreadsheetId = process.env.GOOGLE_INSPECCIONSALIDAS;
 
     try {
-      console.log( placa, conductor, sucursal, tipoVehiculo, odometroSalida,
-        llantasParte1, llantasParte2, fluidos, parametrosVisuales, luces,
-        insumos, documentacion, danosCarroceria, "Datos llegan a servicios");
+      const fechaHoraActual = new Date().toLocaleString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+
+      if (typeof llantasParte1 === "string") {
+        try {
+          llantasParte1 = JSON.parse(llantasParte1);
+        } catch (error) {
+          console.error("Error al analizar la cadena JSON:", error);
+        }
+      }
+
+      if (typeof llantasParte2 === "string") {
+        try {
+          llantasParte2 = JSON.parse(llantasParte2);
+        } catch (error) {
+          console.error("Error al analizar la cadena JSON:", error);
+        }
+      }
+
+      if (typeof fluidos === "string") {
+        try {
+          fluidos = JSON.parse(fluidos);
+        } catch (error) {
+          console.error("Error al analizar la cadena JSON:", error);
+        }
+      }
+
+      const llanta1 = llantasParte1[0];
+      const llanta2 = llantasParte1[1];
+      const llanta3 = llantasParte1[2];
+      const llanta4 = llantasParte1[3];
+      const llanta5 = llantasParte1[4];
+
+      const llanta6 = llantasParte2[0];
+      const llanta7 = llantasParte2[1];
+      const llanta8 = llantasParte2[2];
+      const llanta9 = llantasParte2[3];
+      const llanta10 = llantasParte2[4];
+
+      const fluido1 = fluidos[0];
+      const fluido2 = fluidos[1];
+      const fluido3 = fluidos[2];
+      const fluido4 = fluidos[3];
+
+      const values = [[
+        fechaHoraActual,
+        placa,
+        conductor,
+        sucursal,
+        tipoVehiculo,
+        odometroSalida,
+
+        llanta1?.id, llanta1?.fp ? "sí" : "no", llanta1?.pe ? "sí" : "no", llanta1?.pa ? "sí" : "no", llanta1?.desgaste ? "sí" : "no",
+        llanta2?.id, llanta2?.fp ? "sí" : "no", llanta2?.pe ? "sí" : "no", llanta2?.pa ? "sí" : "no", llanta2?.desgaste ? "sí" : "no",
+        llanta3?.id, llanta3?.fp ? "sí" : "no", llanta3?.pe ? "sí" : "no", llanta3?.pa ? "sí" : "no", llanta3?.desgaste ? "sí" : "no",
+        llanta4?.id, llanta4?.fp ? "sí" : "no", llanta4?.pe ? "sí" : "no", llanta4?.pa ? "sí" : "no", llanta4?.desgaste ? "sí" : "no",
+        llanta5?.id, llanta5?.fp ? "sí" : "no", llanta5?.pe ? "sí" : "no", llanta5?.pa ? "sí" : "no", llanta5?.desgaste ? "sí" : "no",
+
+        llanta6?.id, llanta6?.fp ? "sí" : "no", llanta6?.pe ? "sí" : "no", llanta6?.pa ? "sí" : "no", llanta6?.desgaste ? "sí" : "no",
+        llanta7?.id, llanta7?.fp ? "sí" : "no", llanta7?.pe ? "sí" : "no", llanta7?.pa ? "sí" : "no", llanta7?.desgaste ? "sí" : "no",
+        llanta8?.id, llanta8?.fp ? "sí" : "no", llanta8?.pe ? "sí" : "no", llanta8?.pa ? "sí" : "no", llanta8?.desgaste ? "sí" : "no",
+        llanta9?.id, llanta9?.fp ? "sí" : "no", llanta9?.pe ? "sí" : "no", llanta9?.pa ? "sí" : "no", llanta9?.desgaste ? "sí" : "no",
+        llanta10?.id, llanta10?.fp ? "sí" : "no", llanta10?.pe ? "sí" : "no", llanta10?.pa ? "sí" : "no", llanta10?.desgaste ? "sí" : "no",
+        observacionGeneralLlantas,
+        fluido1?.nombre, fluido1?.requiere ? "sí" : "no", fluido1?.lleno ? "sí" : "no", fluido1?.observacion || "",
+        fluido2?.nombre, fluido2?.requiere ? "sí" : "no", fluido2?.lleno ? "sí" : "no", fluido2?.observacion || "",
+        fluido3?.nombre, fluido3?.requiere ? "sí" : "no", fluido3?.lleno ? "sí" : "no", fluido3?.observacion || "",
+        fluido4?.nombre, fluido4?.requiere ? "sí" : "no", fluido4?.lleno ? "sí" : "no", fluido4?.observacion || "",
+        observacionGeneralFluido
+      ]];
+
+
+      await this.sheets.spreadsheets.values.append({
+        auth: this.auth,
+        spreadsheetId,
+        range: 'Hoja 1!A2',
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: values,
+        },
+      });
+
       console.log('Datos enviados correctamente a Google Sheets.');
     } catch (error) {
-      console.error('Error al procesar datos o subir el archivo:', error.response?.data || error.message || error);
+      console.error(
+        'Error al procesar datos o subir el archivo:',
+        error.response?.data || error.message || error
+      );
       throw new Error('Error al procesar datos o subir el archivo');
     }
 
@@ -740,7 +824,21 @@ export class AppService {
   }
 
 
+
+
 }
+
+
+// llantasParte1: any[],
+// llantasParte2: any[],
+// fluidos: any[],
+// parametrosVisuales: any[],
+// luces: any[],
+// insumos: any[],
+// documentacion: any[],
+// danosCarroceria: any[]
+
+// Hoja 1
 
 // const response = await this.sheets.spreadsheets.get({
 //   auth: this.auth,

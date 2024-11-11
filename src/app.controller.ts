@@ -13,15 +13,17 @@ export class AppController {
   ) {
     const {
       placa, conductor, sucursal, tipoVehiculo, odometroSalida,
-      llantasParte1, llantasParte2, fluidos, parametrosVisuales, luces,
-      insumos, documentacion, danosCarroceria
+        llantasParte1, llantasParte2, observacionGeneralLlantas,fluidos, observacionGeneralFluido
     } = body;
+
 
     const result = await this.appService.handleData(
       placa, conductor, sucursal, tipoVehiculo, odometroSalida,
-      llantasParte1, llantasParte2, fluidos, parametrosVisuales, luces,
-      insumos, documentacion, danosCarroceria
+      llantasParte1, llantasParte2, observacionGeneralLlantas, fluidos, observacionGeneralFluido
     );
+
+    // llantasParte1, llantasParte2, fluidos, parametrosVisuales, luces,
+    // insumos, documentacion, danosCarroceria
 
     return result;
   }
