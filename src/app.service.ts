@@ -718,6 +718,12 @@ export class AppService {
     observacionGeneralLlantas: string,
     fluidos: any[],
     observacionGeneralFluido: string,
+    parametrosVisuales: any[],
+    observacionGeneralVisuales: string,
+    luces: any[],
+    insumos: any[],
+    documentacion: any[],
+    danosCarroceria: any[]
   ) {
     const spreadsheetId = process.env.GOOGLE_INSPECCIONSALIDAS;
 
@@ -756,6 +762,46 @@ export class AppService {
         }
       }
 
+      if (typeof parametrosVisuales === "string") {
+        try {
+          parametrosVisuales = JSON.parse(parametrosVisuales);
+        } catch (error) {
+          console.error("Error al analizar la cadena JSON:", error);
+        }
+      }
+
+      if (typeof luces === "string") {
+        try {
+          luces = JSON.parse(luces);
+        } catch (error) {
+          console.error("Error al analizar la cadena JSON:", error);
+        }
+      }
+
+      if (typeof insumos === "string") {
+        try {
+          insumos = JSON.parse(insumos);
+        } catch (error) {
+          console.error("Error al analizar la cadena JSON:", error);
+        }
+      }
+
+      if (typeof documentacion === "string") {
+        try {
+          documentacion = JSON.parse(documentacion);
+        } catch (error) {
+          console.error("Error al analizar la cadena JSON:", error);
+        }
+      }
+
+      if (typeof danosCarroceria === "string") {
+        try {
+          danosCarroceria = JSON.parse(danosCarroceria);
+        } catch (error) {
+          console.error("Error al analizar la cadena JSON:", error);
+        }
+      }
+
       const llanta1 = llantasParte1[0];
       const llanta2 = llantasParte1[1];
       const llanta3 = llantasParte1[2];
@@ -773,43 +819,64 @@ export class AppService {
       const fluido3 = fluidos[2];
       const fluido4 = fluidos[3];
 
-      const values = [[
-        fechaHoraActual,
-        placa,
-        conductor,
-        sucursal,
-        tipoVehiculo,
-        odometroSalida,
+      const parametros1 = parametrosVisuales[0];
+      const parametros2 = parametrosVisuales[1];
+      const parametros3 = parametrosVisuales[2];
+      const parametros4 = parametrosVisuales[3];
 
-        llanta1?.id, llanta1?.fp ? "sí" : "no", llanta1?.pe ? "sí" : "no", llanta1?.pa ? "sí" : "no", llanta1?.desgaste ? "sí" : "no",
-        llanta2?.id, llanta2?.fp ? "sí" : "no", llanta2?.pe ? "sí" : "no", llanta2?.pa ? "sí" : "no", llanta2?.desgaste ? "sí" : "no",
-        llanta3?.id, llanta3?.fp ? "sí" : "no", llanta3?.pe ? "sí" : "no", llanta3?.pa ? "sí" : "no", llanta3?.desgaste ? "sí" : "no",
-        llanta4?.id, llanta4?.fp ? "sí" : "no", llanta4?.pe ? "sí" : "no", llanta4?.pa ? "sí" : "no", llanta4?.desgaste ? "sí" : "no",
-        llanta5?.id, llanta5?.fp ? "sí" : "no", llanta5?.pe ? "sí" : "no", llanta5?.pa ? "sí" : "no", llanta5?.desgaste ? "sí" : "no",
+      console.log(luces,"Las luces");
 
-        llanta6?.id, llanta6?.fp ? "sí" : "no", llanta6?.pe ? "sí" : "no", llanta6?.pa ? "sí" : "no", llanta6?.desgaste ? "sí" : "no",
-        llanta7?.id, llanta7?.fp ? "sí" : "no", llanta7?.pe ? "sí" : "no", llanta7?.pa ? "sí" : "no", llanta7?.desgaste ? "sí" : "no",
-        llanta8?.id, llanta8?.fp ? "sí" : "no", llanta8?.pe ? "sí" : "no", llanta8?.pa ? "sí" : "no", llanta8?.desgaste ? "sí" : "no",
-        llanta9?.id, llanta9?.fp ? "sí" : "no", llanta9?.pe ? "sí" : "no", llanta9?.pa ? "sí" : "no", llanta9?.desgaste ? "sí" : "no",
-        llanta10?.id, llanta10?.fp ? "sí" : "no", llanta10?.pe ? "sí" : "no", llanta10?.pa ? "sí" : "no", llanta10?.desgaste ? "sí" : "no",
-        observacionGeneralLlantas,
-        fluido1?.nombre, fluido1?.requiere ? "sí" : "no", fluido1?.lleno ? "sí" : "no", fluido1?.observacion || "",
-        fluido2?.nombre, fluido2?.requiere ? "sí" : "no", fluido2?.lleno ? "sí" : "no", fluido2?.observacion || "",
-        fluido3?.nombre, fluido3?.requiere ? "sí" : "no", fluido3?.lleno ? "sí" : "no", fluido3?.observacion || "",
-        fluido4?.nombre, fluido4?.requiere ? "sí" : "no", fluido4?.lleno ? "sí" : "no", fluido4?.observacion || "",
-        observacionGeneralFluido
-      ]];
+      // const values = [[
+      //   fechaHoraActual,
+      //   placa,
+      //   conductor,
+      //   sucursal,
+      //   tipoVehiculo,
+      //   odometroSalida,
 
+      //   llanta1?.fp ? "sí" : "no", llanta1?.pe ? "sí" : "no", llanta1?.pa ? "sí" : "no", llanta1?.desgaste ? "sí" : "no",
 
-      await this.sheets.spreadsheets.values.append({
-        auth: this.auth,
-        spreadsheetId,
-        range: 'Hoja 1!A2',
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: values,
-        },
-      });
+      //   llanta2?.fp ? "sí" : "no", llanta2?.pe ? "sí" : "no", llanta2?.pa ? "sí" : "no", llanta2?.desgaste ? "sí" : "no",
+
+      //   llanta3?.fp ? "sí" : "no", llanta3?.pe ? "sí" : "no", llanta3?.pa ? "sí" : "no", llanta3?.desgaste ? "sí" : "no",
+
+      //   llanta4?.fp ? "sí" : "no", llanta4?.pe ? "sí" : "no", llanta4?.pa ? "sí" : "no", llanta4?.desgaste ? "sí" : "no",
+
+      //   llanta5?.fp ? "sí" : "no", llanta5?.pe ? "sí" : "no", llanta5?.pa ? "sí" : "no", llanta5?.desgaste ? "sí" : "no",
+
+      //   llanta6?.fp ? "sí" : "no", llanta6?.pe ? "sí" : "no", llanta6?.pa ? "sí" : "no", llanta6?.desgaste ? "sí" : "no",
+
+      //   llanta7?.fp ? "sí" : "no", llanta7?.pe ? "sí" : "no", llanta7?.pa ? "sí" : "no", llanta7?.desgaste ? "sí" : "no",
+
+      //   llanta8?.fp ? "sí" : "no", llanta8?.pe ? "sí" : "no", llanta8?.pa ? "sí" : "no", llanta8?.desgaste ? "sí" : "no",
+
+      //   llanta9?.fp ? "sí" : "no", llanta9?.pe ? "sí" : "no", llanta9?.pa ? "sí" : "no", llanta9?.desgaste ? "sí" : "no",
+
+      //   llanta10?.fp ? "sí" : "no", llanta10?.pe ? "sí" : "no", llanta10?.pa ? "sí" : "no", llanta10?.desgaste ? "sí" : "no",
+      //   observacionGeneralLlantas,
+
+      //   fluido1?.nombre, fluido1?.requiere ? "sí" : "no", fluido1?.lleno ? "sí" : "no",
+      //   fluido2?.nombre, fluido2?.requiere ? "sí" : "no", fluido2?.lleno ? "sí" : "no",
+      //   fluido3?.nombre, fluido3?.requiere ? "sí" : "no", fluido3?.lleno ? "sí" : "no",
+      //   fluido4?.nombre, fluido4?.requiere ? "sí" : "no", fluido4?.lleno ? "sí" : "no",
+      //   observacionGeneralFluido,
+
+      //   parametros1?.nombre, parametros1?.si ? "sí" : "no", parametros1?.no ? "sí" : "no",
+      //   parametros2?.nombre, parametros2?.si ? "sí" : "no", parametros2?.no ? "sí" : "no",
+      //   parametros3?.nombre, parametros3?.si ? "sí" : "no", parametros3?.no ? "sí" : "no",
+      //   parametros4?.nombre, parametros4?.si ? "sí" : "no", parametros4?.no ? "sí" : "no",
+      //   observacionGeneralVisuales
+      // ]];
+
+      // await this.sheets.spreadsheets.values.append({
+      //   auth: this.auth,
+      //   spreadsheetId,
+      //   range: 'Hoja 1!A2',
+      //   valueInputOption: 'RAW',
+      //   requestBody: {
+      //     values: values,
+      //   },
+      // });
 
       console.log('Datos enviados correctamente a Google Sheets.');
     } catch (error) {
