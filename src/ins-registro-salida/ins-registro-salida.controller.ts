@@ -14,18 +14,46 @@ export class InsRegistroSalidaController {
     @Body() body: any
   ) {
     const {
-      placa, conductor, sucursal, tipoVehiculo, odometroSalida,
-      llantasParte1, llantasParte2, observacionGeneralLlantas, fluidos, observacionGeneralFluido, parametrosVisuales, observacionGeneralVisuales, luces,
-      insumos, documentacion, danosCarroceria
+      placa,
+      conductor,
+      sucursal,
+      tipoVehiculo,
+      odometroSalida,
+      llantasParte1,
+      llantasParte2,
+      observacionGeneralLlantas,
+      fluidos,
+      observacionGeneralFluido,
+      parametrosVisuales,
+      observacionGeneralVisuales,
+      luces,
+      insumos,
+      documentacion,
+      danosCarroceria
     } = body;
 
+    const estadoSalida = "salida";
+
     const result = await this.InsRegistroSalidaService.handleData(
-      placa, conductor, sucursal, tipoVehiculo, odometroSalida,
-      llantasParte1, llantasParte2, observacionGeneralLlantas, fluidos, observacionGeneralFluido, parametrosVisuales, observacionGeneralVisuales, luces,
-      insumos, documentacion, danosCarroceria
+      placa,
+      conductor,
+      sucursal,
+      tipoVehiculo,
+      odometroSalida,
+      estadoSalida, 
+      llantasParte1,
+      llantasParte2,
+      observacionGeneralLlantas,
+      fluidos,
+      observacionGeneralFluido,
+      parametrosVisuales,
+      observacionGeneralVisuales,
+      luces,
+      insumos,
+      documentacion,
+      danosCarroceria
     );
 
     return result;
-    
   }
 }
