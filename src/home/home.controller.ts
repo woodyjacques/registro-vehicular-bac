@@ -1,6 +1,8 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { HomeService } from './home.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags("home")
 @Controller('home')
 export class HomeController {
 
