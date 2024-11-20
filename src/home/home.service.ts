@@ -15,7 +15,13 @@ export class HomeService {
     this.sheets = google.sheets({ version: 'v4', auth: this.auth });
   }
 
-  async checkPlaca(placa: string): Promise<{ message: string; lastTimestamp?: string; estado?: string; rowIndex?: number }> {
+  async checkPlaca(placa: string): Promise<{
+    message: string;
+    lastTimestamp?: string;
+    estado?: string;
+    datoColumnaG?: string;
+    rowIndex?: number;
+  }> {
     const spreadsheetId = process.env.GOOGLE_INSPECCIONSALIDAS;
     const range = 'Hoja 1!A2:H';
 
@@ -35,7 +41,6 @@ export class HomeService {
 
       const matchingRows = rows
         .map((row, index) => {
-
           const rawTimestamp = row[0]?.trim();
           const correctedTimestamp = rawTimestamp.replace(
             /(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2}:\d{2})/,
@@ -47,11 +52,11 @@ export class HomeService {
             timestamp,
             plate: row[1]?.trim().toUpperCase(),
             estado: row[6]?.trim(),
+            datoColumnaG: row[6]?.trim(),
             rowIndex: index + 2,
           };
         })
         .filter((record) => {
-
           return record.plate === normalizedPlaca && !isNaN(record.timestamp.getTime());
         })
         .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
@@ -62,12 +67,18 @@ export class HomeService {
 
       const lastRecord = matchingRows[0];
 
+      if (lastRecord.datoColumnaG === "entrada") {
+        return { message: `La ${placa} ha ingresado a la plataforma.` };
+      }
+
       return {
         message: `La placa ${placa} está registrada.`,
         lastTimestamp: lastRecord.timestamp.toISOString(),
-        estado: lastRecord.estado || "No especificado",
+        estado: lastRecord.estado || 'No especificado',
+        datoColumnaG: lastRecord.datoColumnaG || 'Dato no disponible',
         rowIndex: lastRecord.rowIndex,
       };
+
     } catch (error) {
       console.error('Error al consultar la placa en Google Sheets:', error.response?.data || error.message || error);
       throw new Error('Error al consultar la placa en Google Sheets');
