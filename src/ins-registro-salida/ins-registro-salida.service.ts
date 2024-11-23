@@ -19,7 +19,7 @@ export class InsRegistroSalidaService {
     sucursal: string,
     tipoVehiculo: string,
     odometroSalida: string,
-    estadoSalida: string, 
+    estadoSalida: string,
     llantasParte1: any[],
     llantasParte2: any[],
     observacionGeneralLlantas: string,
@@ -39,6 +39,13 @@ export class InsRegistroSalidaService {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+
+      const HoraSalida = new Date().toLocaleString('es-ES', {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
@@ -79,13 +86,26 @@ export class InsRegistroSalidaService {
         ...arrays,
       });
 
-      await this.sheets.spreadsheets.values.append({
+      const response = await this.sheets.spreadsheets.values.append({
         auth: this.auth,
         spreadsheetId,
         range: 'Hoja 1!A2',
         valueInputOption: 'RAW',
         requestBody: {
           values: values,
+        },
+      });
+
+      const updatedRange = response.data.updates.updatedRange;
+      const filaInsertada = parseInt(updatedRange.match(/\d+/g).pop(), 10);
+
+      await this.sheets.spreadsheets.values.update({
+        auth: this.auth,
+        spreadsheetId,
+        range: `Hoja 1!GF${filaInsertada}`,
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [[HoraSalida]],
         },
       });
 
@@ -176,7 +196,7 @@ export class InsRegistroSalidaService {
     sucursal,
     tipoVehiculo,
     odometroSalida,
-    estadoSalida, 
+    estadoSalida,
     observacionGeneralLlantas,
     observacionGeneralFluido,
     observacionGeneralVisuales,
