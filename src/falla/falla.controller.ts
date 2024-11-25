@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { FallaService } from './falla.service';
 
-@ApiTags("registro-falla");
+@ApiTags("registro-falla")
 @Controller('registro-falla')
 export class FallaController {
   constructor(private readonly fallaService: FallaService) {}
