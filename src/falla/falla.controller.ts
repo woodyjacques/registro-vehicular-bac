@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors } from '@nestjs/common';
 import { FallaService } from './falla.service';
+import { ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags("registro-falla")
 @Controller('registro-falla')
 export class FallaController {
-  constructor(private readonly fallaService: FallaService) {}
+  constructor(private readonly fallaService: FallaService) { }
 
   @Post('register')
   @UseInterceptors(FileInterceptor('documento'))
@@ -12,10 +14,10 @@ export class FallaController {
     @Body() body: any
   ) {
 
-    const { revisiones, observacion, lastPlacaInfo } = body;
-    const result = await this.insRegistroEntradaService.processRegistroEntrada(revisiones, observacion, lastPlacaInfo);
+    const { fecha, conductor, vehiculo, placa, detalles } = body;
+    const result = await this.fallaService.processRegistroFalla(fecha, conductor, vehiculo, placa, detalles);
 
     return result;
   }
-  
+
 }
