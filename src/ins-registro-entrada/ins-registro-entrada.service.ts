@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { AppService } from 'src/app.service';
 import { google } from 'googleapis';
+import axios from 'axios';
+import { Readable } from 'stream';
+import nodemailer from 'nodemailer'
+import { mailerConfig } from '../mailer.config';
 
 @Injectable()
 export class InsRegistroEntradaService {
@@ -67,7 +71,6 @@ export class InsRegistroEntradaService {
           values: [[HoraEntrada]],
         },
       });
-
       console.log('Datos enviados correctamente a Google Sheets.');
 
       const rowData = await this.getRowFromSheet(rowNumber);
@@ -80,6 +83,63 @@ export class InsRegistroEntradaService {
       console.error('Error al procesar datos o subir el archivo:', error.response?.data || error.message || error);
       throw new Error('Error al procesar datos o subir el archivo');
     }
+  }
+
+  private processJSON(data: any): any {
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data);
+      } catch (error) {
+        console.error('Error al analizar la cadena JSON:', error);
+        return null;
+      }
+    }
+    return data;
+  }
+
+  private initializeArrays({
+    revisiones
+  }: any) {
+    return {
+      revisiones1: revisiones[0],
+      revisiones2: revisiones[1],
+      revisiones3: revisiones[2],
+      revisiones4: revisiones[3],
+      revisiones5: revisiones[4],
+      revisiones6: revisiones[5],
+      revisiones7: revisiones[6],
+      revisiones8: revisiones[7],
+      revisiones9: revisiones[8],
+      revisiones10: revisiones[9],
+      revisiones11: revisiones[10],
+      revisiones12: revisiones[11],
+    };
+  }
+
+  private buildValues({ observacion, ...arrays }: any) {
+    const {
+      revisiones1, revisiones2, revisiones3, revisiones4,
+      revisiones5, revisiones6, revisiones7, revisiones8,
+      revisiones9, revisiones10, revisiones11, revisiones12,
+    } = arrays;
+
+    return [
+      [
+        revisiones1?.descripcion, revisiones1?.opcion ? "sí" : "no",
+        revisiones2?.descripcion, revisiones2?.opcion ? "sí" : "no",
+        revisiones3?.descripcion, revisiones3?.opcion ? "sí" : "no",
+        revisiones4?.descripcion, revisiones4?.opcion ? "sí" : "no",
+        revisiones5?.descripcion, revisiones5?.opcion ? "sí" : "no",
+        revisiones6?.descripcion, revisiones6?.opcion ? "sí" : "no",
+        revisiones7?.descripcion, revisiones7?.opcion ? "sí" : "no",
+        revisiones8?.descripcion, revisiones8?.opcion ? "sí" : "no",
+        revisiones9?.descripcion, revisiones9?.opcion ? "sí" : "no",
+        revisiones10?.descripcion, revisiones10?.opcion ? "sí" : "no",
+        revisiones11?.descripcion, revisiones11?.opcion ? "sí" : "no",
+        revisiones12?.descripcion, revisiones12?.opcion ? "sí" : "no",
+        observacion
+      ],
+    ];
   }
 
   async getRowFromSheet(rowNumber: number) {
@@ -96,7 +156,7 @@ export class InsRegistroEntradaService {
       });
 
       const row = response.data.values;
-      console.log(JSON.stringify(row, null, 2));
+      // console.log(JSON.stringify(row, null, 2));
 
       const fecha = row[0][0];
       const placa = row[0][1];
@@ -289,67 +349,120 @@ export class InsRegistroEntradaService {
         },
       });
 
+      const nameText = { fecha, placa, nombreConductor, sucursal };
+
+      const pdfBuffer: Buffer = await this.exportSheetAsPDF(spreadsheetrev3);
+
+      const originalname = `${nameText.fecha.replace(', ', '-').replace(':', '-')}-${nameText.placa}-${nameText.nombreConductor}-${nameText.sucursal}`;
+
+      await this.uploadFileToDrive({
+        originalname,
+        mimetype: 'application/pdf',
+        buffer: pdfBuffer,
+      });
+
+      console.log('Archivo PDF subido a Google Drive');
+
+      const recipientEmail = 'vehicularregistro526@gmail.com';
+      await this.sendEmail(pdfBuffer, recipientEmail, originalname);
+
     } catch (error) {
       console.error('Error al obtener los datos de la fila de Google Sheets:', error.response?.data || error.message || error);
       throw new Error('Error al obtener los datos de la fila de Google Sheets');
     }
   }
 
-  private processJSON(data: any): any {
-    if (typeof data === 'string') {
-      try {
-        return JSON.parse(data);
-      } catch (error) {
-        console.error('Error al analizar la cadena JSON:', error);
-        return null;
-      }
-    }
-    return data;
+  async exportSheetAsPDF(spreadsheetId: string): Promise<Buffer> {
+
+    const auth = new google.auth.JWT(
+      process.env.GOOGLE_CLIENT_EMAIL,
+      null,
+      process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      process.env.GOOGLE_SCOPES?.split(',')
+    );
+
+    await auth.authorize();
+    const token = await auth.getAccessToken();
+
+    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf`;
+
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${token.token}`
+      },
+      responseType: 'arraybuffer'
+    });
+
+    return Buffer.from(response.data, 'binary');
   }
 
-  private initializeArrays({
-    revisiones
-  }: any) {
-    return {
-      revisiones1: revisiones[0],
-      revisiones2: revisiones[1],
-      revisiones3: revisiones[2],
-      revisiones4: revisiones[3],
-      revisiones5: revisiones[4],
-      revisiones6: revisiones[5],
-      revisiones7: revisiones[6],
-      revisiones8: revisiones[7],
-      revisiones9: revisiones[8],
-      revisiones10: revisiones[9],
-      revisiones11: revisiones[10],
-      revisiones12: revisiones[11],
-    };
+  async uploadFileToDrive(documento: { originalname: string; mimetype: string; buffer: Buffer }) {
+
+    return new Promise((resolve, reject) => {
+      const drive = google.drive({ version: 'v3', auth: this.auth });
+
+      const fileMetadata = {
+        name: documento.originalname,
+        parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
+      };
+
+      const media = {
+        mimeType: documento.mimetype,
+        body: Readable.from(documento.buffer),
+      };
+
+      drive.files.create(
+        {
+          requestBody: fileMetadata,
+          media: media,
+          fields: 'id',
+        },
+        (error, file) => {
+          if (error) {
+            console.error('Error al subir archivo a Google Drive:', error);
+            reject(error);
+          } else {
+            const fileId = file.data.id;
+
+            drive.permissions.create({
+              fileId: fileId,
+              requestBody: {
+                role: 'reader',
+                type: 'anyone',
+              },
+            }, (error) => {
+              if (error) {
+                console.error('Error al configurar permisos en Google Drive:', error);
+                reject(error);
+              } else {
+                const publicUrl = `https://drive.google.com/file/d/${fileId}/view`;
+                resolve(publicUrl);
+              }
+            });
+          }
+        }
+      );
+    });
   }
 
-  private buildValues({ observacion, ...arrays }: any) {
-    const {
-      revisiones1, revisiones2, revisiones3, revisiones4,
-      revisiones5, revisiones6, revisiones7, revisiones8,
-      revisiones9, revisiones10, revisiones11, revisiones12,
-    } = arrays;
+  async sendEmail(pdfBuffer: Buffer, recipientEmail: string, uniqueIdentifier: string) {
 
-    return [
-      [
-        revisiones1?.descripcion, revisiones1?.opcion ? "sí" : "no",
-        revisiones2?.descripcion, revisiones2?.opcion ? "sí" : "no",
-        revisiones3?.descripcion, revisiones3?.opcion ? "sí" : "no",
-        revisiones4?.descripcion, revisiones4?.opcion ? "sí" : "no",
-        revisiones5?.descripcion, revisiones5?.opcion ? "sí" : "no",
-        revisiones6?.descripcion, revisiones6?.opcion ? "sí" : "no",
-        revisiones7?.descripcion, revisiones7?.opcion ? "sí" : "no",
-        revisiones8?.descripcion, revisiones8?.opcion ? "sí" : "no",
-        revisiones9?.descripcion, revisiones9?.opcion ? "sí" : "no",
-        revisiones10?.descripcion, revisiones10?.opcion ? "sí" : "no",
-        revisiones11?.descripcion, revisiones11?.opcion ? "sí" : "no",
-        revisiones12?.descripcion, revisiones12?.opcion ? "sí" : "no",
-        observacion
+    const transporter = nodemailer.createTransport(mailerConfig.transport);
+
+    const mailOptions = {
+      from: mailerConfig.transport.auth.user,
+      to: recipientEmail,
+      subject: 'Reporte de inspección de salida',
+      text: 'Por favor, encuentre el reporte de inspección adjunto en formato PDF.',
+      attachments: [
+        {
+          filename: `${uniqueIdentifier}.pdf`,
+          content: pdfBuffer,
+        },
       ],
-    ];
+    };
+
+    return transporter.sendMail(mailOptions);
   }
 
 }
