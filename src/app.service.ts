@@ -8,6 +8,7 @@ dotenv.config();
 export class AppService {
 
   private auth: any;
+  private sheets: any;
 
   constructor() {
     this.initializeAuth();

@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { AppService } from 'src/app.service';
 import { google } from 'googleapis';
+import { SalidasService } from 'src/salidas/salidas.service';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Injectable()
 export class InsRegistroSalidaService {
@@ -8,9 +11,12 @@ export class InsRegistroSalidaService {
   private sheets: any;
   private auth: any;
 
-  constructor(private readonly appService: AppService) {
+  constructor(
+    private readonly appService: AppService,
+    private readonly salidasService: SalidasService,
+  ) {
     this.auth = this.appService['auth'];
-    this.sheets = google.sheets({ version: 'v4', auth: this.auth });
+    this.sheets = google.sheets({ version: 'v4', auth: this.auth })
   }
 
   async handleData(
@@ -33,6 +39,7 @@ export class InsRegistroSalidaService {
     danosCarroceria: any[],
   ) {
     const spreadsheetId = process.env.GOOGLE_INSPECCIONSALIDAS;
+    console.log(spreadsheetId);
 
     try {
       const fechaHoraActual = new Date().toLocaleString('es-ES', {
@@ -108,6 +115,8 @@ export class InsRegistroSalidaService {
           values: [[HoraSalida]],
         },
       });
+
+      await this.salidasService.handleDataSalida(placa, conductor, fechaHoraActual, sucursal, HoraSalida);
 
       console.log('Datos enviados correctamente a Google Sheets.');
       return { message: 'Datos procesados y almacenados correctamente en Google Sheets' };
