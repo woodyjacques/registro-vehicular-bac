@@ -59,6 +59,26 @@ export class FallaService {
         }
     }
 
+    private formatDetails(text: string, maxLength: number): string[] {
+        const paragraphs: string[] = [];
+        let currentParagraph = '';
+
+        text.split(' ').forEach(word => {
+            if ((currentParagraph + word).length <= maxLength) {
+                currentParagraph += (currentParagraph.length > 0 ? ' ' : '') + word;
+            } else {
+                paragraphs.push(currentParagraph);
+                currentParagraph = word;
+            }
+        });
+
+        if (currentParagraph.length > 0) {
+            paragraphs.push(currentParagraph);
+        }
+
+        return paragraphs;
+    }
+
     async getRowFromSheet(rowNumber: number) {
 
         const spreadsheetId = process.env.GOOGLE_FALLAS;
@@ -81,12 +101,14 @@ export class FallaService {
             const placa = row[0][3];
             const detalles = row[0][4];
 
+            const formattedDetails = this.formatDetails(detalles, 100);
+
             const requests = [
                 { range: 'Hoja 1!C8', values: [[fecha]] },
                 { range: 'Hoja 1!F8', values: [[conductor]] },
                 { range: 'Hoja 1!C10', values: [[vehiculo]] },
                 { range: 'Hoja 1!F10', values: [[placa]] },
-                { range: 'Hoja 1!B14', values: [[detalles]] },
+                { range: 'Hoja 1!B14', values: formattedDetails.map(paragraph => [paragraph]) },
             ];
 
             const data = requests.map(request => ({
