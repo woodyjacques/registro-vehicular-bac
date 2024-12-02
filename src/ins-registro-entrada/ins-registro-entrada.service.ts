@@ -5,6 +5,7 @@ import axios from 'axios';
 import { Readable } from 'stream';
 import nodemailer from 'nodemailer'
 import { mailerConfig } from '../mailer.config';
+import { PDFDocument } from 'pdf-lib';
 
 @Injectable()
 export class InsRegistroEntradaService {
@@ -147,9 +148,11 @@ export class InsRegistroEntradaService {
     const spreadsheetId = process.env.GOOGLE_INSPECCIONSALIDAS;
     const sheetName = 'Hoja 1';
     const range = `${sheetName}!A${rowNumber}:GG${rowNumber}`;
+
     const spreadsheetrev3 = process.env.GOOGLE_R06PT19REVISIONDEVEHICULOSrev3;
 
     try {
+
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId,
         range,
@@ -167,6 +170,9 @@ export class InsRegistroEntradaService {
       const horas = row[0].slice(-2);
       const HoraSalida = horas[0];
       const HoraEntrada = horas[1];
+
+      const nuevoNumero = await this.generarNumeroConsecutivo(sucursal);
+      console.log('Número generado:', nuevoNumero);
 
       const llanta1Obs1 = row[0][8];
       const llanta1Obs2 = row[0][9];
@@ -247,6 +253,7 @@ export class InsRegistroEntradaService {
 
       const requests = [
 
+        { range: 'Hoja1!C6', values: [[nuevoNumero]] },
         { range: 'Hoja1!C10', values: [[fecha]] },
         { range: 'Hoja1!I9', values: [[placa]] },
         { range: 'Hoja1!D9', values: [[nombreConductor]] },
@@ -353,7 +360,7 @@ export class InsRegistroEntradaService {
 
       const pdfBuffer: Buffer = await this.exportSheetAsPDF(spreadsheetrev3);
 
-      const originalname = `${nameText.fecha.replace(', ', '-').replace(':', '-')}-${nameText.placa}-${nameText.nombreConductor}-${nameText.sucursal}`;
+      const originalname = `${nameText.fecha.replace(', ', '-').replace(':', '-')}-${nameText.sucursal}-${nameText.placa}- R06 - PT - 19 - Revisión de Vehículos -${nuevoNumero}`;
 
       await this.uploadFileToDrive({
         originalname,
@@ -372,8 +379,54 @@ export class InsRegistroEntradaService {
     }
   }
 
-  async exportSheetAsPDF(spreadsheetId: string): Promise<Buffer> {
+  async generarNumeroConsecutivo(sucursal: string) {
+    const spreadsheetId = process.env.GOOGLE_NUMEROS_CONSECUTIVOS;
+    const sheetName = 'Hoja 1';
 
+    try {
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${sheetName}!A1:Z1`,
+      });
+
+      const encabezados = response.data.values[0];
+
+      const columnaIndex = encabezados.findIndex((columna: string) => columna.trim().toLowerCase() === sucursal.trim().toLowerCase());
+      if (columnaIndex === -1) {
+        throw new Error(`Sucursal ${sucursal} no encontrada en el encabezado.`);
+      }
+
+      const columnaLetra = String.fromCharCode(65 + columnaIndex);
+
+      const valoresResponse = await this.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${sheetName}!${columnaLetra}2:${columnaLetra}`,
+      });
+
+      const valores = valoresResponse.data.values || [];
+      const ultimoNumero = valores.length ? parseInt(valores[valores.length - 1][0]) : 0;
+
+      const nuevoNumero = ultimoNumero + 1;
+
+      const nuevaFila = valores.length + 2;
+      await this.sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${sheetName}!${columnaLetra}${nuevaFila}`,
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [[nuevoNumero]],
+        },
+      });
+
+      console.log(`Nuevo número consecutivo para ${sucursal}: ${nuevoNumero}`);
+      return nuevoNumero;
+    } catch (error) {
+      console.error('Error al generar número consecutivo:', error);
+      throw new Error('No se pudo generar el número consecutivo.');
+    }
+  }
+
+  async exportSheetAsPDF(spreadsheetId: string): Promise<Buffer> {
     const auth = new google.auth.JWT(
       process.env.GOOGLE_CLIENT_EMAIL,
       null,
@@ -384,19 +437,28 @@ export class InsRegistroEntradaService {
     await auth.authorize();
     const token = await auth.getAccessToken();
 
-    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf`;
-
+    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.5&right_margin=0.5`;
     const response = await axios.get(url, {
-      headers: {
-        Authorization: `Bearer ${token.token}`
-      },
+      headers: { Authorization: `Bearer ${token.token}` },
       responseType: 'arraybuffer'
     });
 
-    return Buffer.from(response.data, 'binary');
+    const pdfBuffer = Buffer.from(response.data, 'binary');
+
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
+    const pages = pdfDoc.getPages();
+
+    pages.forEach(page => {
+      page.setSize(595, 842); 
+    });
+
+    const modifiedPdfBytes = await pdfDoc.save();
+    return Buffer.from(modifiedPdfBytes);
   }
 
   async uploadFileToDrive(documento: { originalname: string; mimetype: string; buffer: Buffer }) {
+
+    console.log(documento.originalname);
 
     return new Promise((resolve, reject) => {
       const drive = google.drive({ version: 'v3', auth: this.auth });

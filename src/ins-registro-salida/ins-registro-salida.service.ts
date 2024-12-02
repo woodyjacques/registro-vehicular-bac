@@ -294,4 +294,59 @@ export class InsRegistroSalidaService {
     ];
   }
 
+  // async actualizarNumeroConsecutivo(sucursal: string) {
+  //   const spreadsheetIdConsecutivos = process.env.GOOGLE_NUMEROS_CONSECUTIVOS
+
+  //   try {
+  //     // Leer los datos actuales del archivo de consecutivos
+  //     const consecutivosData = await this.sheets.spreadsheets.values.get({
+  //       auth: this.auth,
+  //       spreadsheetId: spreadsheetIdConsecutivos,
+  //       range: 'Hoja 1!A:Z', // Asegúrate de que este rango incluye todas las sucursales
+  //     });
+
+  //     const rows = consecutivosData.data.values || [];
+  //     if (rows.length === 0) {
+  //       throw new Error('El archivo de consecutivos está vacío.');
+  //     }
+
+  //     // Buscar la columna correspondiente a la sucursal
+  //     const headerRow = rows[0]; // Primera fila con los nombres de las sucursales
+  //     const columnaSucursal = headerRow.indexOf(sucursal);
+
+  //     if (columnaSucursal === -1) {
+  //       throw new Error(`La sucursal "${sucursal}" no existe en el archivo de consecutivos.`);
+  //     }
+
+  //     // Obtener los números consecutivos existentes para la sucursal
+  //     const numerosSucursal = rows.slice(1).map((row) => parseInt(row[columnaSucursal] || '0', 10));
+  //     const ultimoNumero = Math.max(...numerosSucursal, 0); // Encontrar el último número consecutivo
+
+  //     // Generar el nuevo número consecutivo
+  //     const nuevoNumero = ultimoNumero + 1;
+
+  //     // Crear una nueva fila con el nuevo número en la columna de la sucursal
+  //     const nuevaFila = Array(headerRow.length).fill('');
+  //     nuevaFila[columnaSucursal] = nuevoNumero;
+
+  //     // Guardar el nuevo número en el archivo
+  //     await this.sheets.spreadsheets.values.append({
+  //       auth: this.auth,
+  //       spreadsheetId: spreadsheetIdConsecutivos,
+  //       range: 'Hoja 1',
+  //       valueInputOption: 'RAW',
+  //       requestBody: {
+  //         values: [nuevaFila],
+  //       },
+  //     });
+
+  //     console.log(`Nuevo número consecutivo para la sucursal "${sucursal}": ${nuevoNumero}`);
+  //     return nuevoNumero;
+  //   } catch (error) {
+  //     console.error('Error al actualizar el número consecutivo:', error.response?.data || error.message || error);
+  //     throw new Error('Error al actualizar el número consecutivo');
+  //   }
+  // }
+
+
 }

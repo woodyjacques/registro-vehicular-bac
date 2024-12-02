@@ -14,8 +14,8 @@ export class FallaController {
     @Body() body: any
   ) {
 
-    const { fecha, conductor, vehiculo, placa, detalles } = body;
-    const result = await this.fallaService.processRegistroFalla(fecha, conductor, vehiculo, placa, detalles);
+    const { sucursal, fecha, conductor, vehiculo, placa, detalles } = body;
+    const result = await this.fallaService.processRegistroFalla(sucursal, fecha, conductor, vehiculo, placa, detalles);
 
     return result;
   }

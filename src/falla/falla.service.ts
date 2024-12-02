@@ -18,6 +18,7 @@ export class FallaService {
     }
 
     async processRegistroFalla(
+        sucursal: string,
         fecha: string,
         conductor: string,
         vehiculo: string,
@@ -43,7 +44,7 @@ export class FallaService {
                 range: `Hoja 1!A${nextRow}`,
                 valueInputOption: 'RAW',
                 requestBody: {
-                    values: [[fecha, conductor, vehiculo, placa, detalles]],
+                    values: [[sucursal, fecha, conductor, vehiculo, placa, detalles]],
                 },
             });
 
@@ -80,10 +81,9 @@ export class FallaService {
     }
 
     async getRowFromSheet(rowNumber: number) {
-
         const spreadsheetId = process.env.GOOGLE_FALLAS;
         const sheetName = 'Hoja 1';
-        const range = `${sheetName}!A${rowNumber}:E${rowNumber}`;
+        const range = `${sheetName}!A${rowNumber}:F${rowNumber}`;
         const spreadsheetId3 = process.env.GOOGLE_FALLAS_DOCS;
 
         try {
@@ -95,15 +95,36 @@ export class FallaService {
             const row = response.data.values;
             console.log(JSON.stringify(row, null, 2));
 
-            const fecha = row[0][0];
-            const conductor = row[0][1];
-            const vehiculo = row[0][2];
-            const placa = row[0][3];
-            const detalles = row[0][4];
+            const sucursal = row[0][0];
+            const fecha = row[0][1];
+            const conductor = row[0][2];
+            const vehiculo = row[0][3];
+            const placa = row[0][4];
+            const detalles = row[0][5];
 
             const formattedDetails = this.formatDetails(detalles, 100);
+            const nuevoNumero = await this.generarNumeroConsecutivo(sucursal);
+
+            const clearRequests = [
+                { range: 'Hoja 1!A15:F15' },
+                { range: 'Hoja 1!A16:F16' },
+                { range: 'Hoja 1!A17:F17' },
+                { range: 'Hoja 1!A18:F18' },
+                { range: 'Hoja 1!A19:F19' },
+            ];
+
+            await this.sheets.spreadsheets.values.batchUpdate({
+                auth: this.auth,
+                spreadsheetId: spreadsheetId3,
+                resource: {
+                    data: clearRequests,
+                    valueInputOption: 'RAW',
+                },
+            });
 
             const requests = [
+                { range: 'Hoja 1!F7', values: [[nuevoNumero]] },
+                { range: 'Hoja 1!C7', values: [[sucursal]] },
                 { range: 'Hoja 1!C8', values: [[fecha]] },
                 { range: 'Hoja 1!F8', values: [[conductor]] },
                 { range: 'Hoja 1!C10', values: [[vehiculo]] },
@@ -125,11 +146,11 @@ export class FallaService {
                 },
             });
 
-            const nameText = { fecha, conductor, vehiculo, placa };
+            const nameText = { sucursal, fecha, conductor, vehiculo, placa };
 
             const pdfBuffer: Buffer = await this.exportSheetAsPDF(spreadsheetId3);
 
-            const originalname = `${nameText.fecha.replace(', ', '-').replace(':', '-')}-${nameText.conductor}-${nameText.vehiculo}-${nameText.placa}`;
+            const originalname = `${nameText.fecha.replace(', ', '-').replace(':', '-')}-${nameText.sucursal}-${nameText.placa}- R07 - PT - 19 - Reporte de Falla -${nuevoNumero}`;
 
             await this.uploadFileToDrive({
                 originalname,
@@ -142,10 +163,56 @@ export class FallaService {
             const recipientEmail = 'vehicularregistro526@gmail.com';
             await this.sendEmail(pdfBuffer, recipientEmail, originalname);
 
-
         } catch (error) {
             console.error('Error al obtener los datos de la fila de Google Sheets:', error.response?.data || error.message || error);
             throw new Error('Error al obtener los datos de la fila de Google Sheets');
+        }
+    }
+
+    async generarNumeroConsecutivo(sucursal: string) {
+        const spreadsheetId = process.env.GOOGLE_NUMEROS_CONSECUTIVOS_FALLAS;
+        const sheetName = 'Hoja 1';
+
+        try {
+            const response = await this.sheets.spreadsheets.values.get({
+                spreadsheetId,
+                range: `${sheetName}!A1:Z1`,
+            });
+
+            const encabezados = response.data.values[0];
+
+            const columnaIndex = encabezados.findIndex((columna: string) => columna.trim().toLowerCase() === sucursal.trim().toLowerCase());
+            if (columnaIndex === -1) {
+                throw new Error(`Sucursal ${sucursal} no encontrada en el encabezado.`);
+            }
+
+            const columnaLetra = String.fromCharCode(65 + columnaIndex);
+
+            const valoresResponse = await this.sheets.spreadsheets.values.get({
+                spreadsheetId,
+                range: `${sheetName}!${columnaLetra}2:${columnaLetra}`,
+            });
+
+            const valores = valoresResponse.data.values || [];
+            const ultimoNumero = valores.length ? parseInt(valores[valores.length - 1][0]) : 0;
+
+            const nuevoNumero = ultimoNumero + 1;
+
+            const nuevaFila = valores.length + 2;
+            await this.sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: `${sheetName}!${columnaLetra}${nuevaFila}`,
+                valueInputOption: 'RAW',
+                requestBody: {
+                    values: [[nuevoNumero]],
+                },
+            });
+
+            console.log(`Nuevo número consecutivo para ${sucursal}: ${nuevoNumero}`);
+            return nuevoNumero;
+        } catch (error) {
+            console.error('Error al generar número consecutivo:', error);
+            throw new Error('No se pudo generar el número consecutivo.');
         }
     }
 
