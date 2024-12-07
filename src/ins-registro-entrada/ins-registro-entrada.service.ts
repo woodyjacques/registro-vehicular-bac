@@ -55,12 +55,13 @@ export class InsRegistroEntradaService {
         },
       });
 
-      const HoraEntrada = new Date().toLocaleString('es-ES', {
+      const HoraEntrada = new Intl.DateTimeFormat('es-ES', {
+        timeZone: 'America/Panama',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
         hour12: false,
-      });
+      }).format(new Date());
 
       const columnGRange2 = `Hoja 1!GG${rowNumber}:GG${rowNumber}`;
       await this.sheets.spreadsheets.values.update({
@@ -126,18 +127,18 @@ export class InsRegistroEntradaService {
 
     return [
       [
-        revisiones1?.descripcion, revisiones1?.opcion ? "sí" : "no",
-        revisiones2?.descripcion, revisiones2?.opcion ? "sí" : "no",
-        revisiones3?.descripcion, revisiones3?.opcion ? "sí" : "no",
-        revisiones4?.descripcion, revisiones4?.opcion ? "sí" : "no",
-        revisiones5?.descripcion, revisiones5?.opcion ? "sí" : "no",
-        revisiones6?.descripcion, revisiones6?.opcion ? "sí" : "no",
-        revisiones7?.descripcion, revisiones7?.opcion ? "sí" : "no",
-        revisiones8?.descripcion, revisiones8?.opcion ? "sí" : "no",
-        revisiones9?.descripcion, revisiones9?.opcion ? "sí" : "no",
-        revisiones10?.descripcion, revisiones10?.opcion ? "sí" : "no",
-        revisiones11?.descripcion, revisiones11?.opcion ? "sí" : "no",
-        revisiones12?.descripcion, revisiones12?.opcion ? "sí" : "no",
+        revisiones1?.descripcion, revisiones1?.opcion ? "sí" : "",
+        revisiones2?.descripcion, revisiones2?.opcion ? "sí" : "",
+        revisiones3?.descripcion, revisiones3?.opcion ? "sí" : "",
+        revisiones4?.descripcion, revisiones4?.opcion ? "sí" : "",
+        revisiones5?.descripcion, revisiones5?.opcion ? "sí" : "",
+        revisiones6?.descripcion, revisiones6?.opcion ? "sí" : "",
+        revisiones7?.descripcion, revisiones7?.opcion ? "sí" : "",
+        revisiones8?.descripcion, revisiones8?.opcion ? "sí" : "",
+        revisiones9?.descripcion, revisiones9?.opcion ? "sí" : "",
+        revisiones10?.descripcion, revisiones10?.opcion ? "sí" : "",
+        revisiones11?.descripcion, revisiones11?.opcion ? "sí" : "",
+        revisiones12?.descripcion, revisiones12?.opcion ? "sí" : "",
         observacion
       ],
     ];
@@ -172,7 +173,6 @@ export class InsRegistroEntradaService {
       const HoraEntrada = horas[1];
 
       const nuevoNumero = await this.generarNumeroConsecutivo(sucursal);
-      console.log('Número generado:', nuevoNumero);
 
       const llanta1Obs1 = row[0][8];
       const llanta1Obs2 = row[0][9];
@@ -188,6 +188,60 @@ export class InsRegistroEntradaService {
       const llanta3Obs2 = row[0][19];
       const llanta3Obs3 = row[0][20];
       const llanta3Obs4 = row[0][21];
+
+      const llanta4Obs1 = row[0][23];
+      const llanta4Obs2 = row[0][24];
+      const llanta4Obs3 = row[0][25];
+      const llanta4Obs4 = row[0][26];
+
+      const llanta5Obs1 = row[0][28];
+      const llanta5Obs2 = row[0][29];
+      const llanta5Obs3 = row[0][30];
+      const llanta5Obs4 = row[0][31];
+
+      const llanta6Obs1 = row[0][33];
+      const llanta6Obs2 = row[0][34];
+      const llanta6Obs3 = row[0][35];
+      const llanta6Obs4 = row[0][36];
+
+      const llanta7Obs1 = row[0][38];
+      const llanta7Obs2 = row[0][39];
+      const llanta7Obs3 = row[0][40];
+      const llanta7Obs4 = row[0][41];
+
+      const llanta8Obs1 = row[0][43];
+      const llanta8Obs2 = row[0][44];
+      const llanta8Obs3 = row[0][45];
+      const llanta8Obs4 = row[0][46];
+
+      const llanta9Obs1 = row[0][48];
+      const llanta9Obs2 = row[0][49];
+      const llanta9Obs3 = row[0][50];
+      const llanta9Obs4 = row[0][51];
+
+      const llanta10Obs1 = row[0][53];
+      const llanta10Obs2 = row[0][54];
+      const llanta10Obs3 = row[0][55];
+      const llanta10Obs4 = row[0][56];
+
+      const nivel1No = row[0][60];
+      const nivel1Si = row[0][61];
+
+      const nivel2No = row[0][64];
+      const nivel2Si = row[0][65];
+
+      const nivel3No = row[0][68];
+      const nivel3Si = row[0][69];
+
+      const nivel4No = row[0][72];
+      const nivel4Si = row[0][73];
+      const observacionFluido = row[0][74];
+
+      const Inspección1 = row[0][77];
+      const Inspección2 = row[0][79];
+      const Inspección3 = row[0][81];
+      const Comprobación4 = row[0][83];
+      const observacionVisuales = row[0][84];
 
       const lucesMedias = row[0][87];
       const lucesRetroceso = row[0][89];
@@ -277,6 +331,60 @@ export class InsRegistroEntradaService {
         { range: 'Hoja1!D20', values: [[llanta3Obs2]] },
         { range: 'Hoja1!E20', values: [[llanta3Obs3]] },
         { range: 'Hoja1!F20', values: [[llanta3Obs4]] },
+
+        { range: 'Hoja1!C21', values: [[llanta4Obs1]] },
+        { range: 'Hoja1!D21', values: [[llanta4Obs2]] },
+        { range: 'Hoja1!E21', values: [[llanta4Obs3]] },
+        { range: 'Hoja1!F21', values: [[llanta4Obs4]] },
+
+        { range: 'Hoja1!C22', values: [[llanta5Obs1]] },
+        { range: 'Hoja1!D22', values: [[llanta5Obs2]] },
+        { range: 'Hoja1!E22', values: [[llanta5Obs3]] },
+        { range: 'Hoja1!F22', values: [[llanta5Obs4]] },
+
+        { range: 'Hoja1!C23', values: [[llanta6Obs1]] },
+        { range: 'Hoja1!D23', values: [[llanta6Obs2]] },
+        { range: 'Hoja1!E23', values: [[llanta6Obs3]] },
+        { range: 'Hoja1!F23', values: [[llanta6Obs4]] },
+
+        { range: 'Hoja1!C24', values: [[llanta7Obs1]] },
+        { range: 'Hoja1!D24', values: [[llanta7Obs2]] },
+        { range: 'Hoja1!E24', values: [[llanta7Obs3]] },
+        { range: 'Hoja1!F24', values: [[llanta7Obs4]] },
+
+        { range: 'Hoja1!C25', values: [[llanta8Obs1]] },
+        { range: 'Hoja1!D25', values: [[llanta8Obs2]] },
+        { range: 'Hoja1!E25', values: [[llanta8Obs3]] },
+        { range: 'Hoja1!F25', values: [[llanta8Obs4]] },
+
+        { range: 'Hoja1!C26', values: [[llanta9Obs1]] },
+        { range: 'Hoja1!D26', values: [[llanta9Obs2]] },
+        { range: 'Hoja1!E26', values: [[llanta9Obs3]] },
+        { range: 'Hoja1!F26', values: [[llanta9Obs4]] },
+
+        { range: 'Hoja1!C27', values: [[llanta10Obs1]] },
+        { range: 'Hoja1!D27', values: [[llanta10Obs2]] },
+        { range: 'Hoja1!E27', values: [[llanta10Obs3]] },
+        { range: 'Hoja1!F27', values: [[llanta10Obs4]] },
+
+        { range: 'Hoja1!G33', values: [[nivel1Si]] },
+        { range: 'Hoja1!H33', values: [[nivel1No]] },
+
+        { range: 'Hoja1!G34', values: [[nivel2Si]] },
+        { range: 'Hoja1!H34', values: [[nivel2No]] },
+
+        { range: 'Hoja1!G35', values: [[nivel3Si]] },
+        { range: 'Hoja1!H35', values: [[nivel3No]] },
+
+        { range: 'Hoja1!G36', values: [[nivel4Si]] },
+        { range: 'Hoja1!H36', values: [[nivel4No]] },
+        { range: 'Hoja1!H37', values: [[observacionFluido]] },
+
+        { range: 'Hoja1!G41', values: [[Inspección1]] },
+        { range: 'Hoja1!G42', values: [[Inspección2]] },
+        { range: 'Hoja1!G43', values: [[Inspección3]] },
+        { range: 'Hoja1!G44', values: [[Comprobación4]] },
+        { range: 'Hoja1!H45', values: [[observacionVisuales]] },
 
         { range: 'Hoja1!C50', values: [[lucesMedias]] },
         { range: 'Hoja1!C51', values: [[lucesRetroceso]] },
@@ -449,7 +557,7 @@ export class InsRegistroEntradaService {
     const pages = pdfDoc.getPages();
 
     pages.forEach(page => {
-      page.setSize(595, 842); 
+      page.setSize(595, 842);
     });
 
     const modifiedPdfBytes = await pdfDoc.save();

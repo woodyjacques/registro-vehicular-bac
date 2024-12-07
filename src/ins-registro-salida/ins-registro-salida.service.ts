@@ -36,13 +36,14 @@ export class InsRegistroSalidaService {
     luces: any[],
     insumos: any[],
     documentacion: any[],
-    danosCarroceria: any[],
+    dasCarroceria: any[],
   ) {
     const spreadsheetId = process.env.GOOGLE_INSPECCIONSALIDAS;
     console.log(spreadsheetId);
 
     try {
-      const fechaHoraActual = new Date().toLocaleString('es-ES', {
+      const fechaHoraActual = new Intl.DateTimeFormat('es-ES', {
+        timeZone: 'America/Panama',
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -50,14 +51,15 @@ export class InsRegistroSalidaService {
         minute: '2-digit',
         second: '2-digit',
         hour12: false,
-      });
+      }).format(new Date());
 
-      const HoraSalida = new Date().toLocaleString('es-ES', {
+      const HoraSalida = new Intl.DateTimeFormat('es-ES', {
+        timeZone: 'America/Panama',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
         hour12: false,
-      });
+      }).format(new Date());
 
       llantasParte1 = this.processJSON(llantasParte1);
       llantasParte2 = this.processJSON(llantasParte2);
@@ -66,7 +68,7 @@ export class InsRegistroSalidaService {
       luces = this.processJSON(luces);
       insumos = this.processJSON(insumos);
       documentacion = this.processJSON(documentacion);
-      danosCarroceria = this.processJSON(danosCarroceria);
+      dasCarroceria = this.processJSON(dasCarroceria);
 
       const arrays = this.initializeArrays({
         llantasParte1,
@@ -76,7 +78,7 @@ export class InsRegistroSalidaService {
         luces,
         insumos,
         documentacion,
-        danosCarroceria,
+        dasCarroceria,
       });
 
       const values = this.buildValues({
@@ -146,7 +148,7 @@ export class InsRegistroSalidaService {
     luces,
     insumos,
     documentacion,
-    danosCarroceria,
+    dasCarroceria,
   }: any) {
     return {
       llanta1: llantasParte1[0],
@@ -191,10 +193,10 @@ export class InsRegistroSalidaService {
       documentacion6: documentacion[5],
       documentacion7: documentacion[6],
       documentacion8: documentacion[7],
-      danosCarroceria1: danosCarroceria[0],
-      danosCarroceria2: danosCarroceria[1],
-      danosCarroceria3: danosCarroceria[2],
-      danosCarroceria4: danosCarroceria[3],
+      dasCarroceria1: dasCarroceria[0],
+      dasCarroceria2: dasCarroceria[1],
+      dasCarroceria3: dasCarroceria[2],
+      dasCarroceria4: dasCarroceria[3],
     };
   }
 
@@ -220,7 +222,7 @@ export class InsRegistroSalidaService {
       insumo1, insumo2, insumo3, insumo4, insumo5, insumo6, insumo7, insumo8,
       documentacion1, documentacion2, documentacion3, documentacion4,
       documentacion5, documentacion6, documentacion7, documentacion8,
-      danosCarroceria1, danosCarroceria2, danosCarroceria3, danosCarroceria4,
+      dasCarroceria1, dasCarroceria2, dasCarroceria3, dasCarroceria4,
     } = arrays;
 
     return [
@@ -232,64 +234,64 @@ export class InsRegistroSalidaService {
         tipoVehiculo,
         odometroSalida,
         estadoSalida,
-        "llanta 1", llanta1?.fp ? "sí" : "no", llanta1?.pe ? "sí" : "no", llanta1?.pa ? "sí" : "no", llanta1?.desgaste ? "sí" : "no",
-        "llanta 2", llanta2?.fp ? "sí" : "no", llanta2?.pe ? "sí" : "no", llanta2?.pa ? "sí" : "no", llanta2?.desgaste ? "sí" : "no",
-        "llanta 3", llanta3?.fp ? "sí" : "no", llanta3?.pe ? "sí" : "no", llanta3?.pa ? "sí" : "no", llanta3?.desgaste ? "sí" : "no",
-        "llanta 4", llanta4?.fp ? "sí" : "no", llanta4?.pe ? "sí" : "no", llanta4?.pa ? "sí" : "no", llanta4?.desgaste ? "sí" : "no",
-        "llanta 5", llanta5?.fp ? "sí" : "no", llanta5?.pe ? "sí" : "no", llanta5?.pa ? "sí" : "no", llanta5?.desgaste ? "sí" : "no",
-        "llanta 6", llanta6?.fp ? "sí" : "no", llanta6?.pe ? "sí" : "no", llanta6?.pa ? "sí" : "no", llanta6?.desgaste ? "sí" : "no",
-        "llanta 7", llanta7?.fp ? "sí" : "no", llanta7?.pe ? "sí" : "no", llanta7?.pa ? "sí" : "no", llanta7?.desgaste ? "sí" : "no",
-        "llanta 8", llanta8?.fp ? "sí" : "no", llanta8?.pe ? "sí" : "no", llanta8?.pa ? "sí" : "no", llanta8?.desgaste ? "sí" : "no",
-        "llanta 9", llanta9?.fp ? "sí" : "no", llanta9?.pe ? "sí" : "no", llanta9?.pa ? "sí" : "no", llanta9?.desgaste ? "sí" : "no",
-        "llanta 10", llanta10?.fp ? "sí" : "no", llanta10?.pe ? "sí" : "no", llanta10?.pa ? "sí" : "no", llanta10?.desgaste ? "sí" : "no",
+        "llanta 1", llanta1?.fp ? "sí" : " ", llanta1?.pe ? "sí" : "", llanta1?.pa ? "sí" : "", llanta1?.desgaste ? "sí" : "",
+        "llanta 2", llanta2?.fp ? "sí" : "", llanta2?.pe ? "sí" : "", llanta2?.pa ? "sí" : "", llanta2?.desgaste ? "sí" : "",
+        "llanta 3", llanta3?.fp ? "sí" : "", llanta3?.pe ? "sí" : "", llanta3?.pa ? "sí" : "", llanta3?.desgaste ? "sí" : "",
+        "llanta 4", llanta4?.fp ? "sí" : "", llanta4?.pe ? "sí" : "", llanta4?.pa ? "sí" : "", llanta4?.desgaste ? "sí" : "",
+        "llanta 5", llanta5?.fp ? "sí" : "", llanta5?.pe ? "sí" : "", llanta5?.pa ? "sí" : "", llanta5?.desgaste ? "sí" : "",
+        "llanta 6", llanta6?.fp ? "sí" : "", llanta6?.pe ? "sí" : "", llanta6?.pa ? "sí" : "", llanta6?.desgaste ? "sí" : "",
+        "llanta 7", llanta7?.fp ? "sí" : "", llanta7?.pe ? "sí" : "", llanta7?.pa ? "sí" : "", llanta7?.desgaste ? "sí" : "",
+        "llanta 8", llanta8?.fp ? "sí" : "", llanta8?.pe ? "sí" : "", llanta8?.pa ? "sí" : "", llanta8?.desgaste ? "sí" : "",
+        "llanta 9", llanta9?.fp ? "sí" : "", llanta9?.pe ? "sí" : "", llanta9?.pa ? "sí" : "", llanta9?.desgaste ? "sí" : "",
+        "llanta 10", llanta10?.fp ? "sí" : "", llanta10?.pe ? "sí" : "", llanta10?.pa ? "sí" : "", llanta10?.desgaste ? "sí" : "",
         observacionGeneralLlantas,
-        "Nivel 1", fluido1?.nombre, fluido1?.requiere ? "sí" : "no", fluido1?.lleno ? "sí" : "no",
-        "Nivel 2", fluido2?.nombre, fluido2?.requiere ? "sí" : "no", fluido2?.lleno ? "sí" : "no",
-        "Nivel 3", fluido3?.nombre, fluido3?.requiere ? "sí" : "no", fluido3?.lleno ? "sí" : "no",
-        "Nivel 4", fluido4?.nombre, fluido4?.requiere ? "sí" : "no", fluido4?.lleno ? "sí" : "no",
+        "Nivel 1", fluido1?.nombre, fluido1?.requiere ? "sí" : "", fluido1?.lleno ? "sí" : "",
+        "Nivel 2", fluido2?.nombre, fluido2?.requiere ? "sí" : "", fluido2?.lleno ? "sí" : "",
+        "Nivel 3", fluido3?.nombre, fluido3?.requiere ? "sí" : "", fluido3?.lleno ? "sí" : "",
+        "Nivel 4", fluido4?.nombre, fluido4?.requiere ? "sí" : "", fluido4?.lleno ? "sí" : "",
         observacionGeneralFluido,
         "",
-        parametros1?.nombre, parametros1?.si ? "sí" : "no",
-        parametros2?.nombre, parametros2?.si ? "sí" : "no",
-        parametros3?.nombre, parametros3?.si ? "sí" : "no",
-        parametros4?.nombre, parametros4?.si ? "sí" : "no",
+        parametros1?.nombre, parametros1?.si ? "sí" : "",
+        parametros2?.nombre, parametros2?.si ? "sí" : "",
+        parametros3?.nombre, parametros3?.si ? "sí" : "",
+        parametros4?.nombre, parametros4?.si ? "sí" : "",
         observacionGeneralVisuales,
         "",
-        luces1?.nombre, luces1?.funcionaSi ? "sí" : "no",
-        luces2?.nombre, luces2?.funcionaSi ? "sí" : "no",
-        luces3?.nombre, luces3?.funcionaSi ? "sí" : "no",
-        luces4?.nombre, luces4?.funcionaSi ? "sí" : "no",
-        luces5?.nombre, luces5?.funcionaSi ? "sí" : "no",
-        luces6?.nombre, luces6?.funcionaSi ? "sí" : "no",
-        luces7?.nombre, luces7?.funcionaSi ? "sí" : "no",
-        luces8?.nombre, luces8?.funcionaSi ? "sí" : "no",
+        luces1?.nombre, luces1?.funcionaSi ? "sí" : "",
+        luces2?.nombre, luces2?.funcionaSi ? "sí" : "",
+        luces3?.nombre, luces3?.funcionaSi ? "sí" : "",
+        luces4?.nombre, luces4?.funcionaSi ? "sí" : "",
+        luces5?.nombre, luces5?.funcionaSi ? "sí" : "",
+        luces6?.nombre, luces6?.funcionaSi ? "sí" : "",
+        luces7?.nombre, luces7?.funcionaSi ? "sí" : "",
+        luces8?.nombre, luces8?.funcionaSi ? "sí" : "",
         "",
-        insumo1?.nombre, insumo1?.disponibleSi ? "sí" : "no",
-        insumo2?.nombre, insumo2?.disponibleSi ? "sí" : "no",
-        insumo3?.nombre, insumo3?.disponibleSi ? "sí" : "no",
-        insumo4?.nombre, insumo4?.disponibleSi ? "sí" : "no",
-        insumo5?.nombre, insumo5?.disponibleSi ? "sí" : "no",
-        insumo6?.nombre, insumo6?.disponibleSi ? "sí" : "no",
-        insumo7?.nombre, insumo7?.disponibleSi ? "sí" : "no",
-        insumo8?.nombre, insumo8?.disponibleSi ? "sí" : "no",
+        insumo1?.nombre, insumo1?.disponibleSi ? "sí" : "",
+        insumo2?.nombre, insumo2?.disponibleSi ? "sí" : "",
+        insumo3?.nombre, insumo3?.disponibleSi ? "sí" : "",
+        insumo4?.nombre, insumo4?.disponibleSi ? "sí" : "",
+        insumo5?.nombre, insumo5?.disponibleSi ? "sí" : "",
+        insumo6?.nombre, insumo6?.disponibleSi ? "sí" : "",
+        insumo7?.nombre, insumo7?.disponibleSi ? "sí" : "",
+        insumo8?.nombre, insumo8?.disponibleSi ? "sí" : "",
         "",
-        documentacion1?.nombre, documentacion1?.disponibleSi ? "sí" : "no",
-        documentacion2?.nombre, documentacion2?.disponibleSi ? "sí" : "no",
-        documentacion3?.nombre, documentacion3?.disponibleSi ? "sí" : "no",
-        documentacion4?.nombre, documentacion4?.disponibleSi ? "sí" : "no",
-        documentacion5?.nombre, documentacion5?.disponibleSi ? "sí" : "no",
-        documentacion6?.nombre, documentacion6?.disponibleSi ? "sí" : "no",
-        documentacion7?.nombre, documentacion7?.disponibleSi ? "sí" : "no",
-        documentacion8?.nombre, documentacion8?.disponibleSi ? "sí" : "no",
+        documentacion1?.nombre, documentacion1?.disponibleSi ? "sí" : "",
+        documentacion2?.nombre, documentacion2?.disponibleSi ? "sí" : "",
+        documentacion3?.nombre, documentacion3?.disponibleSi ? "sí" : "",
+        documentacion4?.nombre, documentacion4?.disponibleSi ? "sí" : "",
+        documentacion5?.nombre, documentacion5?.disponibleSi ? "sí" : "",
+        documentacion6?.nombre, documentacion6?.disponibleSi ? "sí" : "",
+        documentacion7?.nombre, documentacion7?.disponibleSi ? "sí" : "",
+        documentacion8?.nombre, documentacion8?.disponibleSi ? "sí" : "",
         "",
-        "Daño 1", danosCarroceria1?.vista, danosCarroceria1?.rayones ? "sí" : "no", danosCarroceria1?.golpes ? "sí" : "no", danosCarroceria1?.quebrado ? "sí" : "no",
-        danosCarroceria1?.faltante ? "sí" : "no",
-        "Daño 2", danosCarroceria2?.vista, danosCarroceria2?.rayones ? "sí" : "no", danosCarroceria2?.golpes ? "sí" : "no", danosCarroceria2?.quebrado ? "sí" : "no",
-        danosCarroceria2?.faltante ? "sí" : "no",
-        "Daño 3", danosCarroceria3?.vista, danosCarroceria3?.rayones ? "sí" : "no", danosCarroceria3?.golpes ? "sí" : "no", danosCarroceria3?.quebrado ? "sí" : "no",
-        danosCarroceria3?.faltante ? "sí" : "no",
-        "Daño 4", danosCarroceria4?.vista, danosCarroceria4?.rayones ? "sí" : "no", danosCarroceria4?.golpes ? "sí" : "no", danosCarroceria4?.quebrado ? "sí" : "no",
-        danosCarroceria4?.faltante ? "sí" : "no"
+        "Daño 1", dasCarroceria1?.vista, dasCarroceria1?.rayones ? "sí" : "", dasCarroceria1?.golpes ? "sí" : "", dasCarroceria1?.quebrado ? "sí" : "",
+        dasCarroceria1?.faltante ? "sí" : "",
+        "Daño 2", dasCarroceria2?.vista, dasCarroceria2?.rayones ? "sí" : "", dasCarroceria2?.golpes ? "sí" : "", dasCarroceria2?.quebrado ? "sí" : "",
+        dasCarroceria2?.faltante ? "sí" : "",
+        "Daño 3", dasCarroceria3?.vista, dasCarroceria3?.rayones ? "sí" : "", dasCarroceria3?.golpes ? "sí" : "", dasCarroceria3?.quebrado ? "sí" : "",
+        dasCarroceria3?.faltante ? "sí" : "",
+        "Daño 4", dasCarroceria4?.vista, dasCarroceria4?.rayones ? "sí" : "", dasCarroceria4?.golpes ? "sí" : "", dasCarroceria4?.quebrado ? "sí" : "",
+        dasCarroceria4?.faltante ? "sí" : ""
       ],
     ];
   }
@@ -311,11 +313,11 @@ export class InsRegistroSalidaService {
   //     }
 
   //     // Buscar la columna correspondiente a la sucursal
-  //     const headerRow = rows[0]; // Primera fila con los nombres de las sucursales
+  //     const headerRow = rows[0]; // Primera fila con los mbres de las sucursales
   //     const columnaSucursal = headerRow.indexOf(sucursal);
 
   //     if (columnaSucursal === -1) {
-  //       throw new Error(`La sucursal "${sucursal}" no existe en el archivo de consecutivos.`);
+  //       throw new Error(`La sucursal "${sucursal}"  existe en el archivo de consecutivos.`);
   //     }
 
   //     // Obtener los números consecutivos existentes para la sucursal
