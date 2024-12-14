@@ -127,18 +127,18 @@ export class InsRegistroEntradaService {
 
     return [
       [
-        revisiones1?.descripcion, revisiones1?.opcion ? "sí" : "",
-        revisiones2?.descripcion, revisiones2?.opcion ? "sí" : "",
-        revisiones3?.descripcion, revisiones3?.opcion ? "sí" : "",
-        revisiones4?.descripcion, revisiones4?.opcion ? "sí" : "",
-        revisiones5?.descripcion, revisiones5?.opcion ? "sí" : "",
-        revisiones6?.descripcion, revisiones6?.opcion ? "sí" : "",
-        revisiones7?.descripcion, revisiones7?.opcion ? "sí" : "",
-        revisiones8?.descripcion, revisiones8?.opcion ? "sí" : "",
-        revisiones9?.descripcion, revisiones9?.opcion ? "sí" : "",
-        revisiones10?.descripcion, revisiones10?.opcion ? "sí" : "",
-        revisiones11?.descripcion, revisiones11?.opcion ? "sí" : "",
-        revisiones12?.descripcion, revisiones12?.opcion ? "sí" : "",
+        revisiones1?.descripcion, revisiones1?.opcion ? "sí" : "no",
+        revisiones2?.descripcion, revisiones2?.opcion ? "sí" : "no",
+        revisiones3?.descripcion, revisiones3?.opcion ? "sí" : "no",
+        revisiones4?.descripcion, revisiones4?.opcion ? "sí" : "no",
+        revisiones5?.descripcion, revisiones5?.opcion ? "sí" : "no",
+        revisiones6?.descripcion, revisiones6?.opcion ? "sí" : "no",
+        revisiones7?.descripcion, revisiones7?.opcion ? "sí" : "no",
+        revisiones8?.descripcion, revisiones8?.opcion ? "sí" : "no",
+        revisiones9?.descripcion, revisiones9?.opcion ? "sí" : "no",
+        revisiones10?.descripcion, revisiones10?.opcion ? "sí" : "no",
+        revisiones11?.descripcion, revisiones11?.opcion ? "sí" : "no",
+        revisiones12?.descripcion, revisiones12?.opcion ? "sí" : "no",
         observacion
       ],
     ];
@@ -162,7 +162,13 @@ export class InsRegistroEntradaService {
       const row = response.data.values;
       // console.log(JSON.stringify(row, null, 2));
 
-      const fecha = row[0][0];
+      const fechaArray = row[0][0];
+      const partesFecha = fechaArray.split(',')[0].split('/');
+      const dia = partesFecha[0];
+      const mes = partesFecha[1];
+      const año = partesFecha[2].slice(-2);
+      const fecha = `${mes}-${dia}-${año}`;
+
       const placa = row[0][1];
       const nombreConductor = row[0][2];
       const sucursal = row[0][3];
@@ -467,8 +473,9 @@ export class InsRegistroEntradaService {
       const nameText = { fecha, placa, nombreConductor, sucursal };
 
       const pdfBuffer: Buffer = await this.exportSheetAsPDF(spreadsheetrev3);
-
-      const originalname = `${nameText.fecha.replace(', ', '-').replace(':', '-')}-${nameText.sucursal}-${nameText.placa}- R06 - PT - 19 - Revisión de Vehículos -${nuevoNumero}`;
+      const sucursal1 = nameText.sucursal.match(/\((.*?)\)/)?.[1] || '';
+      const fechaSinGuiones = nameText.fecha.replace(/-/g, '').replace(', ', '').replace(':', '');
+      const originalname = `${fechaSinGuiones}-${sucursal1}-${nameText.placa}-R06-PT-19-Revisión de Vehículos-${nuevoNumero}`;
 
       await this.uploadFileToDrive({
         originalname,
