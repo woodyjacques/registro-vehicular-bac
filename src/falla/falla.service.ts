@@ -150,7 +150,9 @@ export class FallaService {
 
             const pdfBuffer: Buffer = await this.exportSheetAsPDF(spreadsheetId3);
 
-            const originalname = `${nameText.fecha.replace(', ', '-').replace(':', '-')}-${nameText.sucursal}-${nameText.placa}- R07 - PT - 19 - Reporte de Falla -${nuevoNumero}`;
+            const sucursal1 = nameText.sucursal.match(/\((.*?)\)/)?.[1] || '';
+            const fechaSinGuiones = nameText.fecha.replace(/-/g, '').replace(', ', '').replace(':', '');
+            const originalname = `${fechaSinGuiones}-${sucursal1}-${nameText.placa}- R07-PT-19-Reporte de Falla-${nuevoNumero}`;
 
             await this.uploadFileToDrive({
                 originalname,

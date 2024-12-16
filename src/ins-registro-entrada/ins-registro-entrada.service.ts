@@ -20,7 +20,8 @@ export class InsRegistroEntradaService {
   async processRegistroEntrada(
     revisiones: [],
     observacion: string,
-    lastPlacaInfo: string
+    lastPlacaInfo: string,
+    odometro: string,
   ) {
     const spreadsheetId = process.env.GOOGLE_INSPECCIONSALIDAS;
 
@@ -73,6 +74,18 @@ export class InsRegistroEntradaService {
           values: [[HoraEntrada]],
         },
       });
+
+      const columnGRange3 = `Hoja 1!GH${rowNumber}:GH${rowNumber}`;
+      await this.sheets.spreadsheets.values.update({
+        auth: this.auth,
+        spreadsheetId,
+        range: columnGRange3,
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [[odometro]],
+        },
+      });
+
       console.log('Datos enviados correctamente a Google Sheets.');
 
       const rowData = await this.getRowFromSheet(rowNumber);
@@ -148,7 +161,7 @@ export class InsRegistroEntradaService {
 
     const spreadsheetId = process.env.GOOGLE_INSPECCIONSALIDAS;
     const sheetName = 'Hoja 1';
-    const range = `${sheetName}!A${rowNumber}:GG${rowNumber}`;
+    const range = `${sheetName}!A${rowNumber}:GH${rowNumber}`;
 
     const spreadsheetrev3 = process.env.GOOGLE_R06PT19REVISIONDEVEHICULOSrev3;
 
@@ -310,6 +323,7 @@ export class InsRegistroEntradaService {
       const revisionCuñas = row[0][185];
 
       const observacionGeneralDatos = row[0][186];
+      const odometroEntrada = row[0][189];
 
       const requests = [
 
@@ -320,6 +334,7 @@ export class InsRegistroEntradaService {
         { range: 'Hoja1!C4', values: [[sucursal]] },
         { range: 'Hoja1!H10', values: [[tipoVehiculo]] },
         { range: 'Hoja1!D12', values: [[odometro]] },
+        { range: 'Hoja1!I12', values: [[odometroEntrada]] },
         { range: 'Hoja1!C11', values: [[HoraSalida]] },
         { range: 'Hoja1!H11', values: [[HoraEntrada]] },
 

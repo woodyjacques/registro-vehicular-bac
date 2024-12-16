@@ -15,9 +15,8 @@ export class InsRegistroEntradaController {
     @Body() body: any
   ) {
 
-    const { revisiones, observacion, lastPlacaInfo } = body;
-    const result = await this.insRegistroEntradaService.processRegistroEntrada(revisiones, observacion, lastPlacaInfo);
-
+    const {revisiones, observacion, lastPlacaInfo, odometro } = body;
+    const result = await this.insRegistroEntradaService.processRegistroEntrada(revisiones, observacion, lastPlacaInfo, odometro);
     return result;
   }
 }
